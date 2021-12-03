@@ -25,4 +25,76 @@ public class Model {
     private Status status;
     private Result result;
 
+    /**
+     * {@link Model} Cosntructor 
+     */
+
+    public Model(String name, Data data, Student student, Status status, Result result){
+        this.name = name;
+        this.data = data;
+        this.student = student;
+        this.status = status;
+        this.result = result;
+    }
+
+
+    /**
+     * @return {@link Model} object's name 
+     */
+
+    public String getName(){
+        return name;
+    }
+
+    /**
+     * @return {@link Model} object's {@link Data}
+     */
+
+    public Data getData(){
+        return data;
+    }
+
+    /**
+     * @return {@link Model} object's {@link Student} 
+     */
+
+    public Student getStudent(){
+        return student;
+    }
+
+    /**
+     * @return {@link Model} object's {@link Status} 
+     */
+
+    public Status getStatus(){
+        return status;
+    }
+
+    /**
+     * @return {@link Model} object's {@link Result} 
+     */
+
+    public Result getResult(){
+        return result;
+    }
+
+    /** 
+     * Sets {@link Model}'s {@link Status}
+     * @param status {@link Status}
+     * @post this.getStatus() == {@code status}
+     */
+
+    public void setStatus(Status status){
+        this.status = status;
+    }
+
+    /** 
+     * Sets {@link Model}'s {@link Result}
+     * @param result {@link Result}
+     * @post this.getResult() == {@code result}
+     */
+
+    public void setResult(Result result){
+        this.result = result;
+    }
 }

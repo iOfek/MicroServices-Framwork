@@ -1,0 +1,5 @@
+digraph "bgu.spl:spl221ass2:jar:1.0" { 
+	"bgu.spl:spl221ass2:jar:1.0" -> "junit:junit:jar:4.13.1:test" ; 
+	"bgu.spl:spl221ass2:jar:1.0" -> "com.google.code.gson:gson:jar:2.8.9:compile" ; 
+	"junit:junit:jar:4.13.1:test" -> "org.hamcrest:hamcrest-core:jar:1.3:test" ; 
+ } 

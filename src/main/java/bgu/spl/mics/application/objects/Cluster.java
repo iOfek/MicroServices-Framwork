@@ -28,4 +28,25 @@ public class Cluster {
 		return null;
 	}
 
+	/**
+     * @return the most availible {@link CPU} from {@link Cluster}.
+     */
+	public void recieveDataBatchFromGPU(DataBatch dataBatch){
+		
+	}
+
+	/**
+     * @return the most availible {@link CPU} from {@link Cluster}.
+     */
+	public CPU getMostAvailibleCPU(){
+		return CPUs.lastElement();
+	}
+
+	/**
+     * @return the most availible {@link GPU} from {@link Cluster}.
+     */
+	public GPU getMostAvailibleGPU(){
+		return GPUs.lastElement();
+	}
+
 }

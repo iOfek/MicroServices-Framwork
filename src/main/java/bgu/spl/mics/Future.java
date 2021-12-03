@@ -1,8 +1,11 @@
 package bgu.spl.mics;
 
+import java.nio.channels.InterruptedByTimeoutException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import javax.xml.bind.PrintConversionEvent;
+import javax.xml.namespace.QName;
 
 /**
  * A Future object represents a promised result - an object that will
@@ -84,11 +87,12 @@ public class Future<T> {
      *         elapsed, return null.
      */
 	public T get(long timeout, TimeUnit unit) {
-		if(isDone()){
-			return result;
+		if(this.isDone())
+			return this.result;
+		try{
+			Thread.sleep(unit.toMillis(timeout));
 		}
-	
-		return null;
+		catch(Exception e){}
+		return this.result;	
 	}
-
 }
