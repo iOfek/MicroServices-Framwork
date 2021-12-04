@@ -31,16 +31,6 @@ public class MessageBusImpl implements MessageBus {
 	   return instance;
 	}
 
-	/**
-     * Retrieves the single instance of this class.
-     */
-
-	public static MessageBusImpl getInstance(Student[]students,GPU[]gpus,CPU[]cpus,ConfrenceInformation[]confrences) {
-		if(instance == null) {
-		   instance = new MessageBusImpl();
-		}
-		return instance;
-	 }
 
 	@Override
 	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
