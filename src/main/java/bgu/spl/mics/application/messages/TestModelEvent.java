@@ -1,5 +1,6 @@
 package bgu.spl.mics.application.messages;
-
+import bgu.spl.mics.Event;
+import bgu.spl.mics.application.objects.Model;
 /** 
  * Sent by the student, handled by the GPU microservice, this type of
  * event is processed instantly, and will return results on the model, will return ‘Good’
@@ -8,6 +9,6 @@ package bgu.spl.mics.application.messages;
  * the future via the MessageBus, so the Student can see the change.
  */
 
-public class TestModelEvent {
-    
+public class TestModelEvent implements Event<Model>{
+    public TestModelEvent(){}
 }

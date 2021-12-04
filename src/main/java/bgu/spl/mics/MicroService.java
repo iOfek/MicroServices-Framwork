@@ -22,6 +22,7 @@ public abstract class MicroService implements Runnable {
 
     private boolean terminated = false;
     private final String name;
+    protected static MessageBusImpl msb;
 
     /**
      * @param name the micro-service name (used mainly for debugging purposes -
@@ -29,6 +30,7 @@ public abstract class MicroService implements Runnable {
      */
     public MicroService(String name) {
         this.name = name;
+        msb = MessageBusImpl.getInstance();
     }
 
     /**

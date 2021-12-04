@@ -17,5 +17,53 @@ public class Student {
     private Degree status;
     private int publications;
     private int papersRead;
+    
+    public Student(int name, String department, Degree status, int publications, int papersRead) {
+        this.name = name;
+        this.department = department;
+        this.status = status;
+        this.publications = publications;
+        this.papersRead = papersRead;
+    }
+
+    public int getName() {
+        return name;
+    }
+
+    public void setName(int name) {
+        this.name = name;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
+    public Degree getStatus() {
+        return status;
+    }
+
+    public void setStatus(Degree status) {
+        this.status = status;
+    }
+
+    public int getPublications() {
+        return publications;
+    }
+
+    public void setPublications(int publications) {
+        this.publications = publications;
+    }
+
+    public int getPapersRead() {
+        return papersRead;
+    }
+
+    public void setPapersRead(int papersRead) {
+        this.papersRead = papersRead;
+    }
 
 }

@@ -13,6 +13,8 @@ public class Cluster {
 
 	private Vector<GPU> GPUs;
 	private Vector<CPU> CPUs;
+
+	private static Cluster instance = null;
 	/* 	
 	 * Statistics: You are free to choose how to implement this - It needs to hold the
 	 * following information: Names of all the models trained, Total number of data
@@ -21,11 +23,13 @@ public class Cluster {
 	 */
 
 	/**
-     * Retrieves the single instance of this class.
+     * Retrieves the single instance of {@link Cluster}.
      */
 	public static Cluster getInstance() {
-		//TODO: Implement this
-		return null;
+		if(instance == null) {
+			instance = new Cluster();
+		 }
+		 return instance;
 	}
 
 	/**

@@ -19,17 +19,20 @@ public class GPU {
     private Cluster cluster;
 	private int dataBatchTrainingTime;
 	private int vramCapacity;
-	private int numOfStoredBatches;
-
+	private int numOfStoredProccessedBatches;
+	private  DataBatch [] GPUDataBatches;
+	private Data.Type dType;
     /**
-	 * This should be the the only public constructor in this class.
+	 * {@link GPU} Constructor
 	 */
-	public GPU(Type type, int cores, Cluster cluster) {
+	public GPU(Type type, int cores, Cluster cluster,Data data) {
 		this.type  = type;
         this.cores = cores;
         this.cluster = Cluster.getInstance();
 		setSpecificGPULimitations();
-		this.numOfStoredBatches = 0;
+		this.numOfStoredProccessedBatches = 0;
+		divideDataToDataBatches(data);
+		dType = data.getType();
 	}
 
 	/**
@@ -49,7 +52,20 @@ public class GPU {
 		}
 	}
 
+	/** divdes {@code data} into batches of 1000 samples({@link Data Batch} objects) and stores them in disk
+	 * @param  data - the unprocessed {@link Data} 
+	 */
+	private void divideDataToDataBatches(Data data){
+		int samplesize = 1000;
+		int numOfDataBatches = data.getSize()/samplesize +1;
+		GPUDataBatches = new DataBatch[numOfDataBatches];
+		for (int i = 0; i < GPUDataBatches.length; i++) {
+			GPUDataBatches[i] = new DataBatch(data, i*1000);
+		}
+	}
+
 	/**
+	 * Send data from {@link Student} to be proccessed by the {@link CPU}s through the {@link Cluster}
 	 * @param  data - the unprocessed {@link Data} 
 	 * @inv numOfStoredBatches <= vram
 	 * @post send unproccessed {@code data} To {@link Cluster} in smaller {@link DataBatch}'s.
@@ -58,13 +74,13 @@ public class GPU {
 		
 	}
 
-	/**
+	
+
+	/** Communicates with {@link Cluster} and decides how many {@link DataBatch}es to send (if any)
 	 * @param  data - the unprocessed {@link Data} 
-	 * @post divdes {@code data} into batches of 1000 samples({@link Data Batch} objects) and stores them in disk
 	 */
-	private void divideDataToDataBatches(Data data){
-		int samplesize = 1000;
-		
+	private int numOfBatchesToSend(){
+		return 0;
 	}
 
 	/**
