@@ -1,8 +1,6 @@
 package bgu.spl.mics;
 
 import org.junit.Before;
-import org.junit.After;
-import org.junit.Assert;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -66,7 +64,7 @@ public class FutureTest {
         t2.start();
         assertNull(n);
         try {
-            Thread.sleep(20);
+            Thread.sleep(200);
         } catch (Exception e) { }
         future.resolve(2);
         assertEquals(new Integer(2),future.get());

@@ -5,18 +5,15 @@ import org.junit.Before;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
-import org.junit.After;
-import org.junit.Assert;
+
 import org.junit.Test;
 
 import bgu.spl.mics.example.messages.*;
 import bgu.spl.mics.example.services.*;
-import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 
 public class MessageBusImplTest {

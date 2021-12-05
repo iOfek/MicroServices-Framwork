@@ -42,6 +42,13 @@ public class Data {
     public int getProcessed(){
         return processed;
     }
+    /**
+     * @return {@link Data } object's number of samples which GPU has proccessed for training
+     */
+
+    public void updateProcessed(){
+        processed+=1;
+    }
 
     /**
      * @return {@link Data } object's number of samples

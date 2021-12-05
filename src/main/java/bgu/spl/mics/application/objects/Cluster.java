@@ -1,5 +1,6 @@
 package bgu.spl.mics.application.objects;
 
+import java.util.Queue;
 import java.util.Vector;
 
 /**
@@ -13,6 +14,7 @@ public class Cluster {
 
 	private Vector<GPU> GPUs;
 	private Vector<CPU> CPUs;
+	private Vector<DataBatch> in, out;
 
 	private static Cluster instance = null;
 	/* 	
@@ -23,6 +25,14 @@ public class Cluster {
 	 */
 
 	/**
+     * {@link Cluster} Constructor.
+     */
+
+	private Cluster() {
+		in = new Vector<DataBatch>();
+		out = new Vector<DataBatch>();
+	 }
+	/**
      * Retrieves the single instance of {@link Cluster}.
      */
 	public static Cluster getInstance() {
@@ -30,6 +40,12 @@ public class Cluster {
 			instance = new Cluster();
 		 }
 		 return instance;
+	}
+	public Vector<DataBatch> getInQueue(){
+		return in;
+	}
+	public Vector<DataBatch> getOutQueue(){
+		return out;
 	}
 
 	/**

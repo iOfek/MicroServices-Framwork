@@ -1,7 +1,7 @@
 package bgu.spl.mics.application.objects;
 
-import bgu.spl.mics.MessageBusImpl;
-import bgu.spl.mics.application.messages.TrainModelEvent;
+import java.util.concurrent.ArrayBlockingQueue;
+import bgu.spl.mics.application.objects.Model.Result;
 
 /**
  * Passive object representing a single GPU.
@@ -15,122 +15,137 @@ public class GPU {
     enum Type {RTX3090, RTX2080, GTX1080}
 
     private Type type;
-    private int cores;
+	private Model model;
     private Cluster cluster;
 	private int dataBatchTrainingTime;
-	private int vramCapacity;
-	private int numOfStoredProccessedBatches;
-	private  DataBatch [] GPUDataBatches;
-	private Data.Type dType;
+	private ArrayBlockingQueue<DataBatch> VRAM;
+	private int tickTime;
+	
+	
+
     /**
 	 * {@link GPU} Constructor
 	 */
-	public GPU(Type type, int cores, Cluster cluster,Data data) {
+	public GPU(Type type, Model model) {
 		this.type  = type;
-        this.cores = cores;
+		this.model = model;
         this.cluster = Cluster.getInstance();
-		setSpecificGPULimitations();
-		this.numOfStoredProccessedBatches = 0;
-		divideDataToDataBatches(data);
-		dType = data.getType();
-	}
-
-	/**
-	 * Set specific GPU limitations({@code dataBatchTrainingTime},{@code vram}} by {@link Type}
-	 */
-	private void setSpecificGPULimitations(){
 		switch (this.type) {
-				case RTX3090:
-					dataBatchTrainingTime = 1;
-					vramCapacity = 32;
-				case RTX2080:
-					dataBatchTrainingTime = 2;
-					vramCapacity = 16;
-				case GTX1080:
-					dataBatchTrainingTime = 4;
-					vramCapacity = 8;
+			case RTX3090:
+				dataBatchTrainingTime = 1;
+				setVRAMCapacity(32);
+			case RTX2080:
+				dataBatchTrainingTime = 2;
+				setVRAMCapacity(16);
+			case GTX1080:
+				dataBatchTrainingTime = 4;
+				setVRAMCapacity(8);
 		}
+		this.tickTime =0;//TODO use time service 
+	}
+	
+	/**
+	 * Intialisze VRAM with capacity({@code VRAMCapacity})
+	 * @param VRAMCapacity VRAM Capacity
+	 */
+	public void setVRAMCapacity(int VRAMCapacity) {
+		VRAM = new ArrayBlockingQueue<DataBatch>(VRAMCapacity);
 	}
 
-	/** divdes {@code data} into batches of 1000 samples({@link Data Batch} objects) and stores them in disk
-	 * @param  data - the unprocessed {@link Data} 
+
+	/** 
+	 * divdes {@link GPU}'s model.getData() into batches of 1000 samples({@link Data Batch} objects) and stores them in disk
+	 * @return  DataBatch[] of the the devided {@link GPU}'s model.getData()
 	 */
-	private void divideDataToDataBatches(Data data){
+	public DataBatch[] divideDataToDataBatches(){
 		int samplesize = 1000;
-		int numOfDataBatches = data.getSize()/samplesize +1;
-		GPUDataBatches = new DataBatch[numOfDataBatches];
+		Data data = model.getData();
+		int numOfDataBatches = data.getSize()/samplesize;
+		DataBatch[]GPUDataBatches = new DataBatch[numOfDataBatches];
 		for (int i = 0; i < GPUDataBatches.length; i++) {
 			GPUDataBatches[i] = new DataBatch(data, i*1000);
 		}
+		return GPUDataBatches;
 	}
-
-	/**
-	 * Send data from {@link Student} to be proccessed by the {@link CPU}s through the {@link Cluster}
-	 * @param  data - the unprocessed {@link Data} 
-	 * @inv numOfStoredBatches <= vram
-	 * @post send unproccessed {@code data} To {@link Cluster} in smaller {@link DataBatch}'s.
-	 */
-	public void sendUnproccessedDataToCluster(Data data){
-		
-	}
-
-	
 
 	/** Communicates with {@link Cluster} and decides how many {@link DataBatch}es to send (if any)
 	 * @param  data - the unprocessed {@link Data} 
+	 * @return how many {@link DataBatch}es to send (if any) >= 0
 	 */
-	private int numOfBatchesToSend(){
+	public int numOfBatchesToSend(){
 		return 0;
 	}
 
 	/**
 	 * send unproccessed {@code dataBatch} To Cluster
-	 * @pre numOfStoredBatches <= vram-1
+	 * @throws IllegalStateException if VRAM.remainingCapacity()<=1
+	 * @pre sends batch only if GPU has room for it when it returns<p> VRAM.remainingCapacity()>1
 	 * @param  dataBatch - the unprocessed {@link DataBatch}
-	 * @inv numOfStoredBatches <= vram
-	 * @post @postnumOfStoredBatches == @prenumOfStoredBatches -1 && @postnumOfStoredBatches <= vram-1
-	 * @post sends batch only if GPU has room for it when it returns(e.g. after the CPU processed)
+	 * @inv VRAM.remainingCapacity()>=0
+	 * @post cluster.getInQueue().contains({@code dataBatch}) == true
 	 */
 	
-	private void sendUnproccessedDataBatchToCluster(DataBatch dataBatch){
-
+	public void sendUnproccessedDataBatchToCluster(DataBatch dataBatch) throws IllegalStateException{
+		if(VRAM.remainingCapacity()<=1){
+			throw new IllegalStateException();
+		}			
+		cluster.getInQueue().add(dataBatch);
+		
 	}
 
 
 	/**
-	 * @pre dataBatch != null
+	 * 
 	 * @param  dataBatch - the {@link DataBatch} to be trained;
-	 * @inv  numOfStoredBatches <= vram
-	 * @post send trained dataBatch {@code dataBatch} To Cluster
+	 * @inv  VRAM.remainingCapacity()>=0
+	 * @post getTickTime() = pre.getTickTime() + getDataBatchTrainingTime()
+	 * @post VRAM.size() = pre.VRAM.size()-1 && VRAM.contains({@code dataBatch}) == false
+	 * @post model.getData().getProccessed() == pre.model.getData().getProccessed()+1
 	 */	
 	public void trainDataBatch(DataBatch dataBatch){
-
+		updateTickTime(dataBatchTrainingTime);
+		VRAM.remove(dataBatch);
+		model.getData().updateProcessed();
 	}
-
+	
 	/**
-	 * @param  trainedDataBatch - the trained {@link DataBatch} 
-	 * @post send unproccessed {@code dataBatch} To Cluster
-	 * @post set the {@link Future} of {@link TrainModelEvent} e as complete
-	 * @post model.getResult() == Trained
-	 */	
-	 public void sendTrainedBatch(DataBatch trainedDataBatch){
-		//MessageBusImpl.getInstance().complete(TrainModelEvent e, trainedDataBatch);
-	}
-	/**
-	 * @param  trainedDataBatch - the trained {@link DataBatch} 
-	 * @post set the {@link Future} of {@link TestModelEvent} e as complete via {@link MessageBusImpl}
-	 * @return 'Good’ results with a probability of 0.1 for MSc student, and 0.2 for PhD student. 
-	 * @post model.getResult() == (None || Good|| Bad)
-	 */	
-	public void GPUTestModelEvent(){
-
-	}
-
-	/**
-	 * @post update GPU's tick Time
+	 * @return {@link GPU} tick time 
 	 */
-	public void updateTick(){
-
+	public int getTickTime(){
+		return tickTime;
 	}
-	//מי ששולח את הטיקים עבור הCPU  זה הCPUSERVICE
+
+	/**
+	 * update GPU's tick Time
+	 * @param ticksToAdd ticks to add to GPU clock after opereation
+	 * @post getTickTime() = pre.getTickTime() + {@code ticksToAdd}
+	 */
+	public void updateTickTime(int ticksToAdd){
+		tickTime += ticksToAdd;
+	}
+
+
+	/**
+	 * @return model.getResult() == (Good|| Bad)
+	 */	
+	public Model.Result testModelEvent(){
+		return Result.Good;
+	}
+
+
+	/**
+	 * @return {@link GPU}'s VRAM 
+	 */
+	public ArrayBlockingQueue<DataBatch> getVRAM(){
+		return VRAM;
+	}
+	
+	/**
+	 * @return {@link GPU}'s {@link DataBatch} training time
+	 */
+
+	public int getDataBatchTrainingTime(){
+		return dataBatchTrainingTime;
+	}
+
 }

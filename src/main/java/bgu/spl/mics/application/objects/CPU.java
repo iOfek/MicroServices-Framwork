@@ -1,6 +1,6 @@
 package bgu.spl.mics.application.objects;
 
-import java.util.Vector;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Passive object representing a single CPU.
@@ -11,60 +11,76 @@ public class CPU {
 
     
     private int cores;
-    private Vector<DataBatch> dataBatchCollection;
-    private Cluster cluster;
+    private LinkedBlockingQueue<DataBatch> dataBatchCollection;
+  	private Cluster cluster;
+	private int tickTime;
 
 	/**
 	 * This should be the the only public constructor in this class.
 	 */
-	public CPU(int cores,Vector<DataBatch> dataBatchCollection, Cluster cluster) {
+	public CPU(int cores) {
 		this.cores = cores;
-		this.dataBatchCollection = dataBatchCollection;
-		this.cluster = cluster;
+		this.dataBatchCollection = new LinkedBlockingQueue<DataBatch>();
+		this.cluster = Cluster.getInstance();
+		tickTime = 0;//TODO use time service
 	}
 
 	/**
 	 * @param  dataBatch - the {@link DataBatch} processed
 	 * @return {@link CPU} processing time in ticks for {@code dataBach}
 	 */
-	private long CPUProcessingTimeInTicks(DataBatch dataBatch){
+	public int CPUProcessingTimeInTicks(DataBatch dataBatch){
 		int time=-1;
 		switch (dataBatch.getData().getType()) {
 			case Images:
 				time = (32 / cores) * 4;
+				break;
 			case Text:
 				time = (32 / cores) * 2;
+				break;
 			case Tabular:
 				time = (32 / cores) * 1;
+				break;
 		}
 		return time;
 	}
 
 	/**
+	 * 
+	 * Proccesses {@code dataBatch} and sends back to {@link Cluster} 
 	 * @param  dataBatch - the {@link DataBatch} to be processed
-	 * @post  @postdataBatchCollection.size() == @predataBatchCollection.size() + 1
-	 */
-	public void addDataBatchToCPU(DataBatch dataBatch){
-		dataBatchCollection.add(dataBatch);
-	}
-
-	/**
-	 * @param  dataBatch - the {@link DataBatch} to be processed
-	 * @post send the proccessed {@code dataBatch} to {@link Cluster}
+	 * @post getDataBatchCollection.contains({@code dataBatch}) == false
+	 * @post cluster.getOutQueue().contains({@code dataBatch}) == true
+	 * @post getTickTime() = pre.getTickTime() + CPUProcessingTimeInTicks(dataBatch) 
 	 */
 	public void proccessDataBatch(DataBatch dataBatch){
-		long batchStartTime = System.currentTimeMillis() ;
-		long timeToProccessBatch = CPUProcessingTimeInTicks(dataBatch);
-		if((System.currentTimeMillis() -batchStartTime)> timeToProccessBatch ){
-			sendProccessedDataToCluster(dataBatch);
-		}
+		updateTickTime(CPUProcessingTimeInTicks(dataBatch));
+		dataBatchCollection.remove(dataBatch);
+		cluster.getOutQueue().add(dataBatch);
+	}
+
+	
+	/**
+	 * @return {@link CPU} tick time 
+	 */
+	public int getTickTime(){
+		return tickTime;
+	}
+	/**
+	 * update CPU's tick Time
+	 * @param ticksToAdd ticks to add to CPU clock after opereation
+	 * @post getTickTime() = pre.getTickTime() + {@code ticksToAdd}
+	 */
+	public void updateTickTime(int ticksToAdd){
+		tickTime += ticksToAdd;
 	}
 
 	/**
-	 * @param  proccessedDataBatch - the proccessed {@link DataBatch}
-	 * @post sends {@code proccessedDataBatch} to {@link Cluster}
+	 * @return {@link CPU}'s dataBatchCollection
 	 */
-	private void sendProccessedDataToCluster(DataBatch proccessedDataBatch){
-		
+	public LinkedBlockingQueue<DataBatch> getDataBatchCollection() {
+		return dataBatchCollection;
 	}
+	
+
 }

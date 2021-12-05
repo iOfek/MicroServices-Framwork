@@ -12,13 +12,21 @@ public class Student {
         MSc, PhD
     }
 
-    private int name;
+    private String name;
     private String department;
     private Degree status;
     private int publications;
     private int papersRead;
+    /**
+     * Constructor for {@link Student}
+     * @param name students name 
+     * @param department student's department 
+     * @param status {@link Degree} MSc||PhD
+     * @param publications number of publications
+     * @param papersRead number of papersRead
+     */
     
-    public Student(int name, String department, Degree status, int publications, int papersRead) {
+    public Student(String name, String department, Degree status, int publications, int papersRead) {
         this.name = name;
         this.department = department;
         this.status = status;
@@ -26,11 +34,11 @@ public class Student {
         this.papersRead = papersRead;
     }
 
-    public int getName() {
+    public String getName() {
         return name;
     }
 
-    public void setName(int name) {
+    public void setName(String name) {
         this.name = name;
     }
 
