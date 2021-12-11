@@ -60,7 +60,7 @@ public class MessageBusImplTest {
         try{
             m = msb.awaitMessage(eService);
         }catch(Exception e){}
-        assertEquals(event, m); 
+        assertEquals(broadcast ,m); 
     }
     @Test
     public void testAwaitMessage() {
@@ -83,7 +83,7 @@ public class MessageBusImplTest {
         try {
             Thread.sleep(100);
         } catch (Exception e) {}
-        assertEquals(Thread.State.WAITING,t1.getState());
+        assertEquals(Thread.State.TIMED_WAITING,t1.getState());
         futureEvent = msb.sendEvent(event);
     }
 
@@ -137,7 +137,7 @@ public class MessageBusImplTest {
         try {
             Thread.sleep(100);
         } catch (Exception e){}
-        notify();
+        //notify();
         assertNull(m);
     }
 
@@ -160,6 +160,7 @@ public class MessageBusImplTest {
     public void testUnregister() {
         assertThrows(IllegalStateException.class, () ->msb.unregister(eService));
         msb.register(eService);
+        msb.unregister(eService);
         assertFalse(msb.isMicroServiceRegistred(eService));
     }
 

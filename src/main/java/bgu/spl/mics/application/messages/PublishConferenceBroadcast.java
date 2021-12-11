@@ -1,6 +1,6 @@
 package bgu.spl.mics.application.messages;
 
-
+import bgu.spl.mics.Broadcast;
 
 /**
  * Sent by the conference at a set time (according to
@@ -8,6 +8,6 @@ package bgu.spl.mics.application.messages;
  * After this event is sent, the conference unregisters from the system.
  */
 
-public class PublishConferenceBroadcast {
+public class PublishConferenceBroadcast implements Broadcast{
     
 }

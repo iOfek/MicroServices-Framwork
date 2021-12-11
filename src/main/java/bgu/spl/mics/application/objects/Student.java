@@ -1,5 +1,7 @@
 package bgu.spl.mics.application.objects;
 
+import javax.jws.WebParam.Mode;
+
 /**
  * Passive object representing single student.
  * Add fields and methods to this class as you see fit (including public methods and constructors).
@@ -8,7 +10,7 @@ public class Student {
     /**
      * Enum representing the Degree the student is studying for.
      */
-    enum Degree {
+    public enum Degree {
         MSc, PhD
     }
 
@@ -17,6 +19,9 @@ public class Student {
     private Degree status;
     private int publications;
     private int papersRead;
+    private Model[] models;
+   
+
     /**
      * Constructor for {@link Student}
      * @param name students name 
@@ -26,12 +31,13 @@ public class Student {
      * @param papersRead number of papersRead
      */
     
-    public Student(String name, String department, Degree status, int publications, int papersRead) {
+    public Student(String name, String department, Degree status, int publications, int papersRead, Model[] models) {
         this.name = name;
         this.department = department;
         this.status = status;
         this.publications = publications;
         this.papersRead = papersRead;
+        this.models= models;
     }
 
     public String getName() {
@@ -72,6 +78,13 @@ public class Student {
 
     public void setPapersRead(int papersRead) {
         this.papersRead = papersRead;
+    }
+    public Model[] getModels() {
+        return models;
+    }
+
+    public void setModels(Model[] models) {
+        this.models = models;
     }
 
 }

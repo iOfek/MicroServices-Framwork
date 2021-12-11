@@ -2,6 +2,7 @@ package bgu.spl.mics.application.objects;
 
 import java.util.Queue;
 import java.util.Vector;
+import java.util.concurrent.LinkedBlockingDeque;
 
 /**
  * Passive object representing the cluster.
@@ -14,9 +15,10 @@ public class Cluster {
 
 	private Vector<GPU> GPUs;
 	private Vector<CPU> CPUs;
-	private Vector<DataBatch> in, out;
+	private LinkedBlockingDeque<DataBatch> in, out;
+	// Consider Using SynchronousQueue which has at most one item
+	// it is used a way way to communicate between threads (e.g CPU and GPU)
 
-	private static Cluster instance = null;
 	/* 	
 	 * Statistics: You are free to choose how to implement this - It needs to hold the
 	 * following information: Names of all the models trained, Total number of data
@@ -24,27 +26,42 @@ public class Cluster {
 	 * GPU time units used. 
 	 */
 
+	 /**
+     * {@link Cluster} Singleton Holder.
+     */
+
+	private static class SingletonHolder {
+        private static Cluster instance = new Cluster();
+    }
+
 	/**
      * {@link Cluster} Constructor.
      */
 
 	private Cluster() {
-		in = new Vector<DataBatch>();
-		out = new Vector<DataBatch>();
+		in = new LinkedBlockingDeque<DataBatch>();
+		out = new LinkedBlockingDeque<DataBatch>();
 	 }
 	/**
      * Retrieves the single instance of {@link Cluster}.
      */
 	public static Cluster getInstance() {
-		if(instance == null) {
-			instance = new Cluster();
-		 }
-		 return instance;
-	}
-	public Vector<DataBatch> getInQueue(){
+        return SingletonHolder.instance;
+    }
+
+
+	
+	/**
+     * @return the CPUQueue}.
+     */
+	public LinkedBlockingDeque<DataBatch> getInQueue(){
 		return in;
 	}
-	public Vector<DataBatch> getOutQueue(){
+
+	/**
+     * @return the GPUQueue}.
+     */
+	public LinkedBlockingDeque<DataBatch> getOutQueue(){
 		return out;
 	}
 

@@ -7,6 +7,7 @@ import bgu.spl.mics.application.objects.Model;
  * results with a probability of 0.1 for MSc student, and 0.2 for PhD student. (yes this is
  * random), when the GPU finish handling the event it will update the object, and set
  * the future via the MessageBus, so the Student can see the change.
+ * @param <T>
  */
 
 public class TestModelEvent implements Event<Model>{

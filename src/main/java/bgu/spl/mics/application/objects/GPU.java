@@ -12,7 +12,7 @@ public class GPU {
     /**
      * Enum representing the type of the GPU.
      */
-    enum Type {RTX3090, RTX2080, GTX1080}
+    public enum Type {RTX3090, RTX2080, GTX1080}
 
     private Type type;
 	private Model model;
@@ -52,6 +52,7 @@ public class GPU {
 		VRAM = new ArrayBlockingQueue<DataBatch>(VRAMCapacity);
 	}
 
+	//public 
 
 	/** 
 	 * divdes {@link GPU}'s model.getData() into batches of 1000 samples({@link Data Batch} objects) and stores them in disk
@@ -146,6 +147,12 @@ public class GPU {
 
 	public int getDataBatchTrainingTime(){
 		return dataBatchTrainingTime;
+	}
+	public Model getModel(){
+		return model;
+	}
+	public void setModel(Model model){
+		this.model =model;
 	}
 
 }

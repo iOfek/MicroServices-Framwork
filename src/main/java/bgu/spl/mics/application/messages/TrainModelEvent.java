@@ -1,5 +1,7 @@
 package bgu.spl.mics.application.messages;
 
+import javax.jws.WebParam.Mode;
+import javax.print.attribute.standard.PrinterIsAcceptingJobs;
 import javax.swing.plaf.basic.BasicTreeUI.TreeCancelEditingAction;
 
 import bgu.spl.mics.Event;
@@ -13,5 +15,23 @@ import bgu.spl.mics.application.objects.Model;
  */
 
 public class TrainModelEvent implements Event<Model>{
-    public TrainModelEvent(){}
+
+    private Model model;
+
+    
+
+    public TrainModelEvent(Model model){
+        this.model = model;
+    }
+    
+    public Model getModel(){
+        return model;
+    }
+    
+    public void setModel(Model model) {
+        this.model = model;
+    }
+    public void train(){
+        
+    }
 }

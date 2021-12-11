@@ -22,8 +22,10 @@ public class GPUTest {
     public void setUp() throws Exception{
         data = new Data(Data.Type.Text, 0, 1000);
         dataBatch = new DataBatch(data, 0);
-        student = new Student("name", "CS", Student.Degree.MSc, 0, 0);
-        model = new Model("test", data, student, Model.Status.PreTrained, Model.Result.None);
+        model = new Model("test", data, Model.Status.PreTrained, Model.Result.None);
+        Model[] m = {model};
+        student = new Student("name", "CS", Student.Degree.MSc, 0, 0,m);
+
         gpu = new GPU(GPU.Type.RTX3090, model);
         cluster = Cluster.getInstance();
     }

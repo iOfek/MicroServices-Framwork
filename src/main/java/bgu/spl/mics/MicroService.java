@@ -22,7 +22,7 @@ public abstract class MicroService implements Runnable {
 
     private boolean terminated = false;
     private final String name;
-    protected static MessageBusImpl msb;
+    private MessageBusImpl msb;
 
     /**
      * @param name the micro-service name (used mainly for debugging purposes -
@@ -54,8 +54,29 @@ public abstract class MicroService implements Runnable {
      *                 {@code type} are taken from this micro-service message
      *                 queue.
      */
-    protected final <T, E extends Event<T>> void subscribeEvent(Class<E> type, Callback<E> callback) {
+    public final <T, E extends Event<T>> void subscribeEvent(Class<E> type, Callback<E> callback) {
         msb.subscribeEvent(type, this);
+        //store callback
+        msb.getFuturecallMap().put(type,callback);
+
+        System.out.println("DO SOMETHING");
+       /*  Message m =null;
+        try {
+             m= msb.awaitMessage(this);
+        } catch (IllegalStateException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        
+        if(m.getClass() == type){
+            System.out.println("Calling callback");
+            callback.call((E)m);
+        } */
+        
+            
     }
 
     /**
@@ -79,8 +100,8 @@ public abstract class MicroService implements Runnable {
      *                 queue.
      */
     protected final <B extends Broadcast> void subscribeBroadcast(Class<B> type, Callback<B> callback) {
-        msb.subscribeBroadcast(type,this);
-    }
+
+    }   
 
     /**
      * Sends the event {@code e} using the message-bus and receive a {@link Future<T>}
@@ -94,8 +115,10 @@ public abstract class MicroService implements Runnable {
      *         			micro-service processing this event.
      * 	       			null in case no micro-service has subscribed to {@code e.getClass()}.
      */
-    protected final <T> Future<T> sendEvent(Event<T> e) {
+    public final <T> Future<T> sendEvent(Event<T> e) {
         Future<T> future =  msb.sendEvent(e);
+        if(!msb.geteMap().containsKey(e.getClass()))
+            return null;
         return future; 
     }
 
@@ -152,6 +175,19 @@ public abstract class MicroService implements Runnable {
     public final void run() {
         initialize();
         while (!terminated) {
+            Message m =null;
+            try {
+                m= msb.awaitMessage(this);
+            } catch (IllegalStateException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            Callback callback = msb.getFuturecallMap().get(m.getClass());
+            if(callback!= null)
+                callback.call(m);
             System.out.println("NOT IMPLEMENTED!!!"); 
         }
     }

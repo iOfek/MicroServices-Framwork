@@ -12,12 +12,17 @@ public class Model {
     /**
      * Enum representing the status of the Model.
      */
-    enum Status {PreTrained, Training, Trained, Tested}
+    public enum Status {PreTrained, Training, Trained, Tested}
+
+    public static <T extends Enum<T>> T getInstance(final String value, final Class<T> enumClass) {
+        return Enum.valueOf(enumClass, value);
+    }
+
 
     /**
      * Enum representing the results of the Model.
      */
-    enum Result {None, Good, Bad}
+    public enum Result {None, Good, Bad}
 
     private String name;
     private Data data;
@@ -29,10 +34,9 @@ public class Model {
      * {@link Model} Cosntructor 
      */
 
-    public Model(String name, Data data, Student student, Status status, Result result){
+    public Model(String name, Data data,  Status status, Result result){
         this.name = name;
         this.data = data;
-        this.student = student;
         this.status = status;
         this.result = result;
     }
@@ -58,9 +62,7 @@ public class Model {
      * @return {@link Model} object's {@link Student} 
      */
 
-    public Student getStudent(){
-        return student;
-    }
+    
 
     /**
      * @return {@link Model} object's {@link Status} 

@@ -20,10 +20,11 @@ public interface MessageBus {
      * @param <T>  The type of the result expected by the completed event.
      * @param type The {@link Event} type to subscribe to,
      * @param m    The subscribing micro-service.
-     * @throws IllegalStateException  if isMicroServiceRegistred({@code m}) == false
      * @pre isMicroServiceRegistred({@code m}) == true
      * @post let {@code e} be the next {@link Event} of the same {@code type}sent, and assume {@code m} to be the next  MicroService to recieve an {@link Event} of this type, 
      * then awaitMessage(m) == {@code e}
+     * @throws IllegalStateException  if isMicroServiceRegistred({@code m}) == false
+    
      */
     <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) throws IllegalStateException;
 
