@@ -71,7 +71,8 @@ public interface MessageBus {
      * <p>
      * @param <T>    	The type of the result expected by the event and its corresponding future object.
      * @param e     	The event to add to the queue.
-     * @return {@link Future<T>} object to be resolved once the processing is complete
+     * @return null if no microservice is subscribed for this type of event otherwise,
+     * {@link Future<T>} object to be resolved once the processing is complete 
      * @post Let {@code m} be a {@link MicroService}<p>
      *  if pre(isMicroServiceRegistred({@code m}) == true && subscribeEvent({@code e}.getClass(),{@code m}) )
      *  && {@code m} is the next in the round-robin order <p>then, awaitMessage({@code m}) == e

@@ -35,7 +35,7 @@ public class TimeService extends MicroService{
      */
 
 	private static class SingletonHolder {
-        private static TimeService instance = new TimeService(1,5500);
+        private static TimeService instance = new TimeService(1,55);
     }
 
 	/**
@@ -52,8 +52,11 @@ public class TimeService extends MicroService{
 		Timer timer = new Timer("Time Service");
 		TimerTask t = new TimerTask() {
 			public void run(){
-				if(duration> 0)
+				if(duration> 0){
 					sendBroadcast(broadcast);
+					duration-=1;
+				}
+					
 				else{
 					terminate();
 					this.cancel();

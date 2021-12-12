@@ -17,6 +17,7 @@ import bgu.spl.mics.application.objects.GPU;
 import bgu.spl.mics.application.objects.Student;
 import bgu.spl.mics.application.services.GPUService;
 import bgu.spl.mics.application.services.StudentService;
+import bgu.spl.mics.application.services.TimeService;
 
 /** This is the Main class of Compute Resources Management System application. You should parse the input file,
  * create the different instances of the objects, and run the system.
@@ -31,61 +32,62 @@ public class CRMSRunner {
         ConfrenceInformation[]confrences;
         int tickTime;
         int duration;
-        Data data = new Data(Data.Type.Text, 0, 1000);
+        Data data = new Data(Data.Type.Text, 0, 1000000);
         DataBatch dataBatch = new DataBatch(data, 0);
-        Model model = new Model("test", data, Model.Status.PreTrained, Model.Result.None);
+        Model model = new Model("testinggg", data, Model.Status.PreTrained, Model.Result.None);
         Model[] m = {model};
         Student student = new Student("name", "CS", Student.Degree.MSc, 0, 0,m);
 
         GPU gpu = new GPU(GPU.Type.RTX3090, null);
         Cluster cluster = Cluster.getInstance();
+        TimeService timeService = TimeService.getInstance();
         StudentService studentService = new StudentService("studen", student);
         GPUService gpuService = new GPUService("GPU Service", gpu);
-        MessageBusImpl msb = MessageBusImpl.getInstance();
 
-        msb.register(gpuService);
-        msb.register(studentService);
+        ExecutorService e = Executors.newFixedThreadPool(3);
+        e.submit(gpuService);
+        try {
+            Thread.sleep(1000);
+        } catch (Exception ex) {
+            //TODO: handle exception
+        }
+        e.submit(timeService);
+        e.submit(studentService);
+        
+        
+
+/* 
         Thread t1 = new Thread(()->{
             gpuService.run();
         });
         t1.start();
         
-         try {
-            Thread.sleep(1000);
-        } catch (Exception e) { }
-        
-        TrainModelEvent t = new TrainModelEvent(model);
-        msb.sendEvent(t);
-       
-        System.out.println("Sent Model: "+t.getModel().getName()); 
 
-        /* msb.subscribeEvent(TrainModelEvent.class, gpuService);
-        TrainModelEvent t = new TrainModelEvent(model);
-        msb.sendEvent(t);
-        Message message = null;
-        try {
-            message =msb.awaitMessage(gpuService);
-        } catch (IllegalStateException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace(); */
-        
-        
-        //System.out.println(((TrainModelEvent)message).getModel().getName());
-        
-        //System.out.println(gpu.getModel().getName());
-        //ExecutorService ea = Executors.newFixedThreadPool(3);
-       /*  e.execute(mBusImpl);
-        e.execute(gpuService);
-        e.execute(studentService); */
-        
-        //gpuService.run();
-  /*       Thread t1 = new Thread(()->{
-            studentService.run();
+        Thread t2 = new Thread(()->{
             try {
-                Thread.sleep(1000);
-            } catch (Exception e) { }
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            timeService.run();
         });
-        t1.start(); */
+        t2.start();
+        
+
+
+        Thread t3 = new Thread(()->{
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+            studentService.run();
+        });
+        t3.start(); */
+         
+        
+
     }
 }

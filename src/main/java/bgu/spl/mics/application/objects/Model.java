@@ -26,7 +26,7 @@ public class Model {
 
     private String name;
     private Data data;
-    private Student student;
+    //private Student student;
     private Status status;
     private Result result;
 

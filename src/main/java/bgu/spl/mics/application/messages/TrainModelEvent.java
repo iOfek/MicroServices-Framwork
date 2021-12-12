@@ -31,7 +31,7 @@ public class TrainModelEvent implements Event<Model>{
     public void setModel(Model model) {
         this.model = model;
     }
-    public void train(){
-        
+    public TrainModelEvent gEvent(){
+        return this;
     }
 }

@@ -11,5 +11,23 @@ import bgu.spl.mics.application.objects.Model;
  */
 
 public class TestModelEvent implements Event<Model>{
-    public TestModelEvent(){}
+    
+    private Model model;
+
+    
+
+    public TestModelEvent(Model model){
+        this.model = model;
+    }
+    
+    public Model getModel(){
+        return model;
+    }
+    
+    public void setModel(Model model) {
+        this.model = model;
+    }
+    public TestModelEvent gEvent(){
+        return this;
+    }
 }

@@ -1,6 +1,8 @@
 package bgu.spl.mics.application.objects;
 
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import bgu.spl.mics.application.objects.Model.Result;
 
 /**
@@ -20,7 +22,7 @@ public class GPU {
 	private int dataBatchTrainingTime;
 	private ArrayBlockingQueue<DataBatch> VRAM;
 	private int tickTime;
-	
+	private AtomicInteger t = new AtomicInteger(1);
 	
 
     /**
@@ -74,7 +76,7 @@ public class GPU {
 	 * @return how many {@link DataBatch}es to send (if any) >= 0
 	 */
 	public int numOfBatchesToSend(){
-		return 0;
+		return VRAM.remainingCapacity()/2;
 	}
 
 	/**
@@ -108,12 +110,16 @@ public class GPU {
 		VRAM.remove(dataBatch);
 		model.getData().updateProcessed();
 	}
+	public int trainingTime(int n){
+		return dataBatchTrainingTime*n;
+	}
 	
 	/**
 	 * @return {@link GPU} tick time 
 	 */
 	public int getTickTime(){
-		return tickTime;
+		//return tickTime;
+		return t.get();
 	}
 
 	/**
@@ -122,7 +128,8 @@ public class GPU {
 	 * @post getTickTime() = pre.getTickTime() + {@code ticksToAdd}
 	 */
 	public void updateTickTime(int ticksToAdd){
-		tickTime += ticksToAdd;
+		//tickTime += ticksToAdd;
+		t.incrementAndGet();
 	}
 
 

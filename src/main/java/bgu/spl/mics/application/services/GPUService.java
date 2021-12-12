@@ -14,6 +14,7 @@ import bgu.spl.mics.MessageBus;
 import bgu.spl.mics.MessageBusImpl;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.TestModelEvent;
+import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.messages.TrainModelEvent;
 import bgu.spl.mics.application.objects.Data;
 import bgu.spl.mics.application.objects.DataBatch;
@@ -32,40 +33,95 @@ import bgu.spl.mics.application.objects.Data.Type;
  */
 public class GPUService extends MicroService {
 
-    private GPU gpu;
+    private volatile GPU gpu;
     
 
 
     public GPUService(String name,GPU gpu) {
         super(name);
         this.gpu = gpu;
+      
         
     }
     public void trainModelEvent(TrainModelEvent event){
-        System.out.println("trained");
-        System.out.println("Recieved "+event.getModel().getName());
+        System.out.println(event.getModel().getName());
         gpu.setModel(event.getModel());
+        System.out.println("Before: "+gpu.getTickTime());
         DataBatch[] dataBatchs = gpu.divideDataToDataBatches();
         //first send data batchs to cpu
-        for (DataBatch dataBatch : dataBatchs) {
-            gpu.sendUnproccessedDataBatchToCluster(dataBatch);
+        int index =0;
+        
+        /* for (int i = 0; i < dataBatchs.length;) {
+            
+            int n = gpu.numOfBatchesToSend();
+            for (int j = 0; j < n && j+i < dataBatchs.length; j++) {
+                gpu.sendUnproccessedDataBatchToCluster(dataBatchs[i+j]);
+            }
+            ;
+
+            int timeAfterTraining = gpu.getTickTime()+gpu.trainingTime(n);
+            System.out.println(timeAfterTraining);
+            System.out.println(gpu.getTickTime());
+            while(gpu.getTickTime() < timeAfterTraining)
+            {   
+                try {
+                    Thread.sleep(10);
+                } catch (Exception e) {
+                    //TODO: handle exception
+                }
+                //then train the proccessed data
+               System.out.println(gpu.getTickTime());
+            }
+            i+=n;
+        } */
+        while(gpu.getTickTime() <= 5){
+            try {
+                this.wait();
+            } catch (Exception e) {
+                //TODO: handle exception
+            }
         }
-        //then train the proccessed data
-        ArrayBlockingQueue<DataBatch> VRAM = gpu.getVRAM();
-        gpu.trainDataBatch(VRAM.poll());
+        System.out.println("After: "+gpu.getTickTime());
+        
+        
         
         //complete
         complete(event, gpu.getModel());
         
 
     }
-    public void testModelEvent(Model m){
+    public void testModelEvent(TestModelEvent event){
+        gpu.setModel(event.getModel());
         gpu.testModelEvent();
+        //complete
+        complete(event, gpu.getModel());
+    
     }
     
     @Override
     protected void initialize() {  
-       
+        
+        
+
+        Thread bt = new Thread(()->{
+            subscribeBroadcast(TickBroadcast.class, call->{
+                gpu.updateTickTime(1);
+                System.out.println(gpu.getTickTime());
+            });
+        }); 
+        bt.start();
+        
+
+         Thread et = new Thread(()->{
+            subscribeEvent(TrainModelEvent.class, m->{
+                trainModelEvent(m);
+                //trainModelEvent(call.gEvent());
+            });
+        });
+        et.start();  
+        /* subscribeEvent(TestModelEvent.class, call->{
+        testModelEvent(call.gEvent()); 
+    });*/
        
 
     }
