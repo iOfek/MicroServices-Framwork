@@ -1,8 +1,10 @@
 package bgu.spl.mics.application.objects;
 
+import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Vector;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Passive object representing the cluster.
@@ -11,11 +13,11 @@ import java.util.concurrent.LinkedBlockingDeque;
  * Add all the fields described in the assignment as private fields.
  * Add fields and methods to this class as you see fit (including public methods and constructors).
  */
-public class Cluster {
+public class Cluster implements Runnable{
 
 	private Vector<GPU> GPUs;
-	private Vector<CPU> CPUs;
-	private LinkedBlockingDeque<DataBatch> in, out;
+	private LinkedList<CPU> CPUs;
+	private LinkedBlockingQueue<DataBatch> in, out;
 	// Consider Using SynchronousQueue which has at most one item
 	// it is used a way way to communicate between threads (e.g CPU and GPU)
 
@@ -31,17 +33,30 @@ public class Cluster {
      */
 
 	private static class SingletonHolder {
-        private static Cluster instance = new Cluster();
+		
+        private static Cluster instance = new Cluster( );
     }
 
-	/**
-     * {@link Cluster} Constructor.
-     */
+	public void addGpu(GPU gpu){
+		GPUs.add(gpu);
+	}
+	public void addCpu(CPU cpu){
+		CPUs.addLast(cpu);
+	}
 
-	private Cluster() {
-		in = new LinkedBlockingDeque<DataBatch>();
-		out = new LinkedBlockingDeque<DataBatch>();
-	 }
+	/**
+     * {@link Cluster}  public Constructor.
+     */
+	
+	private Cluster(){
+		GPUs = new Vector<>();
+		CPUs = new LinkedList<>();
+		in = new LinkedBlockingQueue<DataBatch>();
+		out = new LinkedBlockingQueue<DataBatch>();
+	}
+
+
+
 	/**
      * Retrieves the single instance of {@link Cluster}.
      */
@@ -54,36 +69,52 @@ public class Cluster {
 	/**
      * @return the CPUQueue}.
      */
-	public LinkedBlockingDeque<DataBatch> getInQueue(){
+	public LinkedBlockingQueue<DataBatch> getInQueue(){
 		return in;
 	}
 
 	/**
      * @return the GPUQueue}.
      */
-	public LinkedBlockingDeque<DataBatch> getOutQueue(){
+	public LinkedBlockingQueue<DataBatch> getOutQueue(){
 		return out;
 	}
 
-	/**
-     * @return the most availible {@link CPU} from {@link Cluster}.
-     */
-	public void recieveDataBatchFromGPU(DataBatch dataBatch){
+
 		
-	}
+	@Override
+	public void run() {
+		System.out.println("Cluster");
+			Thread t1 = new Thread(()->{
+				while(true){
+					DataBatch dataBatch =null;
+					while(!in.isEmpty()){
+						//System.out.println("taking");
+						dataBatch  = in.poll();	
+						CPUs.getFirst().getDataBatchCollection().add(dataBatch);
+						//round robin
+						CPU cpu = CPUs.removeFirst();
+						CPUs.addLast(cpu);
+					}
+				}
+				
+			});
+	
+			Thread t2 = new Thread(()->{
+				while(true){
+					DataBatch dataBatch =null;
+					while(!out.isEmpty()){
+						//System.out.println("Sending");
+						dataBatch = out.poll();
+						GPUs.get(dataBatch.getGpuId()).getVRAM().add(dataBatch);
+					}
+				}
+			});
+			t1.start();
+			t2.start();
+		}
 
-	/**
-     * @return the most availible {@link CPU} from {@link Cluster}.
-     */
-	public CPU getMostAvailibleCPU(){
-		return CPUs.lastElement();
-	}
-
-	/**
-     * @return the most availible {@link GPU} from {@link Cluster}.
-     */
-	public GPU getMostAvailibleGPU(){
-		return GPUs.lastElement();
-	}
+		
+	
 
 }

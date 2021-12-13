@@ -26,7 +26,8 @@ public class GPUTest {
         Model[] m = {model};
         student = new Student("name", "CS", Student.Degree.MSc, 0, 0,m);
 
-        gpu = new GPU(GPU.Type.RTX3090, model);
+        gpu = new GPU(GPU.Type.RTX3090);
+        gpu.setModel(model);
         cluster = Cluster.getInstance();
     }
 
@@ -70,8 +71,8 @@ public class GPUTest {
     @Test
     public void testUpdateTick() {
         int time = gpu.getTickTime();
-        gpu.updateTickTime(10);
-        assertEquals(time + 10, gpu.getTickTime());
+        gpu.advanceTick();
+        assertEquals(time + 1, gpu.getTickTime());
 
     }
 }
