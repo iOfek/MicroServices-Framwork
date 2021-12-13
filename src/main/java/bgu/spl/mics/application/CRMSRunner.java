@@ -32,7 +32,7 @@ public class CRMSRunner {
 
         Student[] students = null;
         GPU[] gpus = null;
-        LinkedList<CPU> cpus = null;
+        LinkedList<CPU> cpus = new LinkedList<>();
         ConfrenceInformation[] conferences = null;
         int tickTime=0;
         int duration=0;
@@ -68,10 +68,10 @@ public class CRMSRunner {
                     conferences = gson.fromJson(jReader,ConfrenceInformation[].class);
                 }
                 if (name.equals("TickTime")) {
-                    tickTime = jReader.nextInt();;
+                    tickTime = jReader.nextInt();
                 }
                 if (name.equals("Duration")) {
-                    duration = jReader.nextInt();;
+                    duration = jReader.nextInt();
                 }
             }
         } catch (Exception ex) {
