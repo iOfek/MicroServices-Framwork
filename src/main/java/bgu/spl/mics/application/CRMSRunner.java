@@ -84,7 +84,7 @@ public class CRMSRunner {
             e.submit(new GPUService("GPU Service "+ i,gpus[i]));
         }
         for(int i=0;i<cpus.size();i++) {
-            e.submit(new CPUService("CPU Service "+ i));
+            e.submit(new CPUService("CPU Service "+ i,cpus.get(i)));
         }
         for(int i=0;i<conferences.length;i++) {
             e.submit(new ConferenceService("Conference Service "+i,conferences[i]));
