@@ -35,7 +35,7 @@ public class TimeService extends MicroService{
      */
 
 	private static class SingletonHolder {
-        private static TimeService instance = new TimeService(1,55);
+        private static TimeService instance = new TimeService(1,5000);
     }
 
 	/**

@@ -2,6 +2,7 @@ package bgu.spl.mics.application.messages;
 
 import bgu.spl.mics.Event;
 import bgu.spl.mics.application.objects.ConfrenceInformation;
+import bgu.spl.mics.application.objects.Model;
 
 /**
  * Sent by the student, handled by the Conference micro
@@ -10,5 +11,14 @@ import bgu.spl.mics.application.objects.ConfrenceInformation;
  */
 
 public class PublishResultsEvent implements Event<ConfrenceInformation>{
+    private Model model;
+
+    public PublishResultsEvent(Model model) {
+        this.model = model;
+    }
     
+     public Model getModel() {
+        return model;
+    }
+
 }

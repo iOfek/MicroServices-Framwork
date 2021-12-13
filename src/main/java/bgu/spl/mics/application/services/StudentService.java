@@ -1,12 +1,15 @@
 package bgu.spl.mics.application.services;
 
+import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.PublishConferenceBroadcast;
 import bgu.spl.mics.application.messages.PublishResultsEvent;
+import bgu.spl.mics.application.messages.TestModelEvent;
 import bgu.spl.mics.application.messages.TrainModelEvent;
 import bgu.spl.mics.application.objects.ConfrenceInformation;
 import bgu.spl.mics.application.objects.Model;
 import bgu.spl.mics.application.objects.Student;
+import bgu.spl.mics.application.objects.Model.Result;
 
 /**
  * Student is responsible for sending the {@link TrainModelEvent},
@@ -32,11 +35,26 @@ public class StudentService extends MicroService {
             
         });
         for (Model model : student.getModels()) {
-
-            sendEvent(new TrainModelEvent(model));
+            
+            Future<Model> future= sendEvent(new TrainModelEvent(model));
+            System.out.println(model.getName() + " sent! ");
+            try {
+                model = future.get();
+            } catch (Exception e) {
+                //TODO: handle exception
+            }
+            System.out.println(model.getName() + " resolved! ");
+            /* future= sendEvent(new TestModelEvent(model));
+            try {
+                model = future.get();
+            } catch (Exception e) {
+                //TODO: handle exception
+            }
+            //if model is good?
+            if(model.getResult() == Result.Good)
+                sendEvent(new PublishResultsEvent(model)); */
         }
-        //publish results event
-        //sendEvent(new PublishResultsEvent());
+        
 
     }
 }

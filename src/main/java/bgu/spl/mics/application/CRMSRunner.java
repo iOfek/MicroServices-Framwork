@@ -34,14 +34,20 @@ public class CRMSRunner {
         int duration;
         Data data = new Data(Data.Type.Text, 0, 1000000);
         DataBatch dataBatch = new DataBatch(data, 0);
-        Model model = new Model("testinggg", data, Model.Status.PreTrained, Model.Result.None);
-        Model[] m = {model};
-        Student student = new Student("name", "CS", Student.Degree.MSc, 0, 0,m);
+        Model model1 = new Model("model1", data, Model.Status.PreTrained, Model.Result.None);
+        Model model2 = new Model("model2", data, Model.Status.PreTrained, Model.Result.None);
+        Model model3 = new Model("model3", data, Model.Status.PreTrained, Model.Result.None);
+        Model model4 = new Model("model4", data, Model.Status.PreTrained, Model.Result.None);
 
-        GPU gpu = new GPU(GPU.Type.RTX3090, null);
+        Model[] models1 = {model1,model2};
+        Student student1 = new Student("name", "CS", Student.Degree.MSc, 0, 0,models1);
+        Model []models2 ={model3,model4};
+        Student student2 = new Student("name", "CS", Student.Degree.MSc, 0, 0,models2);
+        GPU gpu = new GPU(GPU.Type.RTX3090);
         Cluster cluster = Cluster.getInstance();
         TimeService timeService = TimeService.getInstance();
-        StudentService studentService = new StudentService("studen", student);
+        StudentService studentService1 = new StudentService("student 1", student1);
+        StudentService studentService2 = new StudentService("student 2", student2);
         GPUService gpuService = new GPUService("GPU Service", gpu);
 
         ExecutorService e = Executors.newFixedThreadPool(3);
@@ -52,7 +58,8 @@ public class CRMSRunner {
             //TODO: handle exception
         }
         e.submit(timeService);
-        e.submit(studentService);
+        e.submit(studentService1);
+        e.submit(studentService2);
         
         
 

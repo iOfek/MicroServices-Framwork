@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.services;
 
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import javax.jws.WebParam.Mode;
 import javax.naming.spi.DirStateFactory.Result;
@@ -33,60 +34,57 @@ import bgu.spl.mics.application.objects.Data.Type;
  */
 public class GPUService extends MicroService {
 
-    private volatile GPU gpu;
-    
+    private  GPU gpu;
+    private LinkedBlockingQueue<TrainModelEvent> trainQueue;
+    private LinkedBlockingQueue<TestModelEvent> testQueue;
+    private Object lock = new Object();
 
 
     public GPUService(String name,GPU gpu) {
         super(name);
         this.gpu = gpu;
-      
-        
+        trainQueue = new LinkedBlockingQueue<TrainModelEvent>();
+        testQueue = new LinkedBlockingQueue<TestModelEvent>();         
     }
+
     public void trainModelEvent(TrainModelEvent event){
         System.out.println(event.getModel().getName());
         gpu.setModel(event.getModel());
-        System.out.println("Before: "+gpu.getTickTime());
+        
         DataBatch[] dataBatchs = gpu.divideDataToDataBatches();
         //first send data batchs to cpu
         int index =0;
         
-        /* for (int i = 0; i < dataBatchs.length;) {
+        for (int i = 0; i < dataBatchs.length;) {
             
             int n = gpu.numOfBatchesToSend();
             for (int j = 0; j < n && j+i < dataBatchs.length; j++) {
                 gpu.sendUnproccessedDataBatchToCluster(dataBatchs[i+j]);
             }
             ;
-
+            
             int timeAfterTraining = gpu.getTickTime()+gpu.trainingTime(n);
-            System.out.println(timeAfterTraining);
-            System.out.println(gpu.getTickTime());
-            while(gpu.getTickTime() < timeAfterTraining)
-            {   
-                try {
-                    Thread.sleep(10);
-                } catch (Exception e) {
-                    //TODO: handle exception
-                }
+            
+            System.out.println("Before: "+gpu.getTickTime());
+            synchronized (lock){
                 //then train the proccessed data
-               System.out.println(gpu.getTickTime());
+                while(gpu.getTickTime() < timeAfterTraining){ 
+                                
+                }
             }
+            System.out.println("After: "+gpu.getTickTime());
             i+=n;
-        } */
-        while(gpu.getTickTime() <= 5){
-            try {
-                this.wait();
-            } catch (Exception e) {
-                //TODO: handle exception
-            }
-        }
-        System.out.println("After: "+gpu.getTickTime());
+            System.out.println("sent to cluster " +n +" Databatchs" );
+        } 
+       
+        
+       
         
         
         
         //complete
         complete(event, gpu.getModel());
+        gpu.setModel(null);
         
 
     }
@@ -100,29 +98,50 @@ public class GPUService extends MicroService {
     
     @Override
     protected void initialize() {  
-        
-        
-
-        Thread bt = new Thread(()->{
-            subscribeBroadcast(TickBroadcast.class, call->{
-                gpu.updateTickTime(1);
-                System.out.println(gpu.getTickTime());
-            });
-        }); 
-        bt.start();
-        
-
-         Thread et = new Thread(()->{
-            subscribeEvent(TrainModelEvent.class, m->{
-                trainModelEvent(m);
-                //trainModelEvent(call.gEvent());
-            });
+        subscribeBroadcast(TickBroadcast.class, call->{
+            
+            gpu.advanceTick();
+            //System.out.println(gpu.getTickTime());
         });
-        et.start();  
-        /* subscribeEvent(TestModelEvent.class, call->{
-        testModelEvent(call.gEvent()); 
-    });*/
-       
+
+        subscribeEvent(TrainModelEvent.class, m->{
+            if(gpu.getModel()==null){
+                if(trainQueue.isEmpty()){
+                    Thread eht = new Thread(()->{trainModelEvent(m);}); 
+                    eht.start();
+                }
+                else{
+                    trainQueue.add(m);
+                
+                    Thread eht = new Thread(()->{
+                        while(!trainQueue.isEmpty())
+                            trainModelEvent(trainQueue.poll());
+                    }); 
+                    eht.start();
+                }
+            }
+            else
+                trainQueue.add(m);
+        });
+        subscribeEvent(TestModelEvent.class, m->{
+            if(gpu.getModel()==null){
+                if(testQueue.isEmpty()){
+                    Thread eht = new Thread(()->{testModelEvent(m);}); 
+                    eht.start();
+                }
+                else{
+                    testQueue.add(m);
+                
+                    Thread eht = new Thread(()->{
+                        while(!testQueue.isEmpty())
+                            testModelEvent(testQueue.poll());
+                    }); 
+                    eht.start();
+                }
+            }
+            else
+                testQueue.add(m);
+        });    
 
     }
 }

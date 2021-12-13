@@ -28,20 +28,23 @@ public class GPU {
     /**
 	 * {@link GPU} Constructor
 	 */
-	public GPU(Type type, Model model) {
+	public GPU(Type type) {
 		this.type  = type;
-		this.model = model;
+		this.model = null;
         this.cluster = Cluster.getInstance();
 		switch (this.type) {
 			case RTX3090:
 				dataBatchTrainingTime = 1;
 				setVRAMCapacity(32);
+				break;
 			case RTX2080:
 				dataBatchTrainingTime = 2;
 				setVRAMCapacity(16);
+				break;
 			case GTX1080:
 				dataBatchTrainingTime = 4;
 				setVRAMCapacity(8);
+				break;
 		}
 		this.tickTime =0;//TODO use time service 
 	}
@@ -76,7 +79,7 @@ public class GPU {
 	 * @return how many {@link DataBatch}es to send (if any) >= 0
 	 */
 	public int numOfBatchesToSend(){
-		return VRAM.remainingCapacity()/2;
+		return VRAM.remainingCapacity();
 	}
 
 	/**
@@ -106,7 +109,7 @@ public class GPU {
 	 * @post model.getData().getProccessed() == pre.model.getData().getProccessed()+1
 	 */	
 	public void trainDataBatch(DataBatch dataBatch){
-		updateTickTime(dataBatchTrainingTime);
+		
 		VRAM.remove(dataBatch);
 		model.getData().updateProcessed();
 	}
@@ -127,7 +130,7 @@ public class GPU {
 	 * @param ticksToAdd ticks to add to GPU clock after opereation
 	 * @post getTickTime() = pre.getTickTime() + {@code ticksToAdd}
 	 */
-	public void updateTickTime(int ticksToAdd){
+	public void advanceTick(){
 		//tickTime += ticksToAdd;
 		t.incrementAndGet();
 	}

@@ -8,4 +8,24 @@ public class ConfrenceInformation {
 
     private String name;
     private int date;
+    private int tickTime;
+
+    public ConfrenceInformation(String name, int date) {
+        this.name = name;
+        this.date = date;
+        this.tickTime = 1;
+    }
+
+    public int getTickTime(){
+        return tickTime;
+    }
+
+    public void advanceTick(){
+        tickTime+=1;
+    }
+    public int getDate(){
+        return date;
+    }
+
+    
 }
