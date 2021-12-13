@@ -20,8 +20,7 @@ public class GPU {
 	private Model model;
     private Cluster cluster;
 	private int dataBatchTrainingTime;
-	private ArrayBlockingQueue<DataBatch> VRAM;
-	private int tickTime;
+	private volatile ArrayBlockingQueue<DataBatch> VRAM;
 	private AtomicInteger t = new AtomicInteger(1);
 	
 
@@ -46,7 +45,6 @@ public class GPU {
 				setVRAMCapacity(8);
 				break;
 		}
-		this.tickTime =0;//TODO use time service 
 	}
 	
 	/**
@@ -79,7 +77,7 @@ public class GPU {
 	 * @return how many {@link DataBatch}es to send (if any) >= 0
 	 */
 	public int numOfBatchesToSend(){
-		return VRAM.remainingCapacity();
+		return (VRAM.remainingCapacity())/2;
 	}
 
 	/**
@@ -113,8 +111,11 @@ public class GPU {
 		VRAM.remove(dataBatch);
 		model.getData().updateProcessed();
 	}
-	public int trainingTime(int n){
-		return dataBatchTrainingTime*n;
+
+
+
+	public int trainingTime(){
+		return dataBatchTrainingTime* VRAM.size();
 	}
 	
 	/**
@@ -139,8 +140,8 @@ public class GPU {
 	/**
 	 * @return model.getResult() == (Good|| Bad)
 	 */	
-	public Model.Result testModelEvent(){
-		return Result.Good;
+	public void testModelEvent(Model model){
+		model.setResult(Result.Good);//TODO add real random
 	}
 
 

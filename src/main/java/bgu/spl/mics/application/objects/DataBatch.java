@@ -10,7 +10,7 @@ import javax.swing.text.html.StyleSheet;
 public class DataBatch {
     private Data data;
     private int start_index;
-
+    private int gpuId;
     
     /**
      * {@link DataBatch} Cosntructor 
@@ -21,6 +21,13 @@ public class DataBatch {
         this.start_index = start_index;
     }
 
+    public int getGpuId(){
+        return gpuId;
+    }
+
+    public void setGpuId(int gpuId){
+        this.gpuId = gpuId; 
+    }
     /**
      * @return the {@link Data}, the {@link DataBatch } object belongs to
      */

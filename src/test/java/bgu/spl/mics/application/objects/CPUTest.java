@@ -23,21 +23,21 @@ public class CPUTest {
         cluster = Cluster.getInstance();
     }
 
-    @Test
+/*     @Test
     public void testProccessDataBatch() {
         int time = cpu.getTickTime();
-        cpu.proccessDataBatch(dataBatch);
+        //cpu.proccessDataBatch();
         assertFalse(cpu.getDataBatchCollection().contains(dataBatch));
         assertTrue(cluster.getOutQueue().contains(dataBatch));
         assertEquals(time + cpu.CPUProcessingTimeInTicks(dataBatch), cpu.getTickTime());
-    }
+    } */
 
 
     @Test
     public void testUpdateTickTime() {
         int time = cpu.getTickTime();
-        cpu.updateTickTime(10);
-        assertEquals(time + 10, cpu.getTickTime());
+        cpu.advanceTick();
+        assertEquals(time + 1, cpu.getTickTime());
     }
     @Test
     public void testCPUProcessingTimeInTicks(){

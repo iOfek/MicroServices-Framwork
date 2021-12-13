@@ -1,5 +1,13 @@
 package bgu.spl.mics;
 
+import java.lang.invoke.CallSite;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 /**
  * The MicroService is an abstract class that any micro-service in the system
  * must extend. The abstract MicroService class is responsible to get and
@@ -23,7 +31,7 @@ public abstract class MicroService implements Runnable {
     private boolean terminated = false;
     private final String name;
     private MessageBusImpl msb;
-
+    private HashMap<Class, Callback> classCallbackMap;
     /**
      * @param name the micro-service name (used mainly for debugging purposes -
      *             does not have to be unique)
@@ -31,6 +39,7 @@ public abstract class MicroService implements Runnable {
     public MicroService(String name) {
         this.name = name;
         msb = MessageBusImpl.getInstance();
+        classCallbackMap = new HashMap<Class, Callback>();
     }
 
     /**
@@ -57,8 +66,7 @@ public abstract class MicroService implements Runnable {
     protected final <T, E extends Event<T>> void subscribeEvent(Class<E> type, Callback<E> callback) {
         msb.subscribeEvent(type, this);
         //store callback
-        msb.getClassCallbackMap().put(type,callback);      
-            
+        classCallbackMap.putIfAbsent(type, callback); 
     }
 
     /**
@@ -84,7 +92,8 @@ public abstract class MicroService implements Runnable {
     protected final <B extends Broadcast> void subscribeBroadcast(Class<B> type, Callback<B> callback) {
         msb.subscribeBroadcast(type, this);
         //store callback
-        msb.getClassCallbackMap().put(type,callback);   
+        classCallbackMap.putIfAbsent(type, callback);     
+        
         
     }   
 
@@ -163,10 +172,11 @@ public abstract class MicroService implements Runnable {
         initialize();
         while (!terminated) {
             
-            Message m =null;
+           
             try {
-                m= msb.awaitMessage(this);
-                msb.getClassCallbackMap().get(m.getClass()).call(m);
+                Message m= msb.awaitMessage(this);
+                classCallbackMap.get(m.getClass()).call(m);
+             
             } catch (IllegalStateException e) {
                 e.printStackTrace();
             } catch (InterruptedException e) {

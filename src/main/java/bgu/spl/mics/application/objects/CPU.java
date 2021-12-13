@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.objects;
 
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Passive object representing a single CPU.
@@ -13,7 +14,7 @@ public class CPU {
     private int cores;
     private LinkedBlockingQueue<DataBatch> dataBatchCollection;
   	private Cluster cluster;
-	private int tickTime;
+	private AtomicInteger t = new AtomicInteger(1);
 
 	/**
 	 * This should be the the only public constructor in this class.
@@ -22,7 +23,7 @@ public class CPU {
 		this.cores = cores;
 		this.dataBatchCollection = new LinkedBlockingQueue<DataBatch>();
 		this.cluster = Cluster.getInstance();
-		tickTime = 0;//TODO use time service
+		
 	}
 
 	/**
@@ -49,13 +50,22 @@ public class CPU {
 	 * 
 	 * Proccesses {@code dataBatch} and sends back to {@link Cluster} 
 	 * @param  dataBatch - the {@link DataBatch} to be processed
+	 * @throws InterruptedException
 	 * @post getDataBatchCollection.contains({@code dataBatch}) == false
 	 * @post cluster.getOutQueue().contains({@code dataBatch}) == true
 	 * @post getTickTime() = pre.getTickTime() + CPUProcessingTimeInTicks(dataBatch) 
 	 */
-	public void proccessDataBatch(DataBatch dataBatch){
-		updateTickTime(CPUProcessingTimeInTicks(dataBatch));
-		dataBatchCollection.remove(dataBatch);
+	public void proccessDataBatch() throws InterruptedException{
+		DataBatch dataBatch =  dataBatchCollection.take();
+		//System.out.println("CPU processing DB");
+		
+			int currTime = getTickTime();
+			//System.out.println("CPU curr time: "+ currTime);
+
+			while(getTickTime()< currTime + CPUProcessingTimeInTicks(dataBatch)){
+				//System.out.print("");
+			}
+		
 		cluster.getOutQueue().add(dataBatch);
 	}
 
@@ -64,15 +74,15 @@ public class CPU {
 	 * @return {@link CPU} tick time 
 	 */
 	public int getTickTime(){
-		return tickTime;
+		return t.get();
 	}
 	/**
 	 * update CPU's tick Time
 	 * @param ticksToAdd ticks to add to CPU clock after opereation
 	 * @post getTickTime() = pre.getTickTime() + {@code ticksToAdd}
 	 */
-	public void updateTickTime(int ticksToAdd){
-		tickTime += ticksToAdd;
+	public void advanceTick(){
+		t.incrementAndGet();
 	}
 
 	/**
