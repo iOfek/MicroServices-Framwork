@@ -57,13 +57,15 @@ public class CPU {
 	 */
 	public void proccessDataBatch() throws InterruptedException{
 		DataBatch dataBatch =  dataBatchCollection.take();
-		System.out.println("CPU processing DB");
-		synchronized(this){
+		//System.out.println("CPU processing DB");
+		
 			int currTime = getTickTime();
-			while(getTickTime()< currTime + CPUProcessingTimeInTicks(dataBatch)){
+			//System.out.println("CPU curr time: "+ currTime);
 
+			while(getTickTime()< currTime + CPUProcessingTimeInTicks(dataBatch)){
+				//System.out.print("");
 			}
-		}
+		
 		cluster.getOutQueue().add(dataBatch);
 	}
 

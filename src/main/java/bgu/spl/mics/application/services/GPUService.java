@@ -48,7 +48,7 @@ public class GPUService extends MicroService {
     }
 
     public void trainModelEvent(TrainModelEvent event){
-        System.out.println( "GPU recieved "+ event.getModel().getName());
+        //System.out.println( "GPU recieved "+ event.getModel().getName());
         gpu.setModel(event.getModel());
         
         DataBatch[] dataBatchs = gpu.divideDataToDataBatches();
@@ -58,7 +58,7 @@ public class GPUService extends MicroService {
         for (int i = 0; i < dataBatchs.length;) {
             
             int n = gpu.numOfBatchesToSend();
-            System.out.println("Sending " +n+ " batchs");
+            //System.out.println("Sending " +n+ " batchs");
             for (int j = 0; j < n && j+i < dataBatchs.length; j++) {
                 gpu.sendUnproccessedDataBatchToCluster(dataBatchs[i+j]);
             }
@@ -72,24 +72,26 @@ public class GPUService extends MicroService {
 
             int timeAfterTraining = gpu.getTickTime()+gpu.trainingTime();
             
-            System.out.println("Before: "+gpu.getTickTime());
+            //System.out.println("Before: "+gpu.getTickTime());
             synchronized (lock){
                 //then train the proccessed data
                 while(gpu.getTickTime() < timeAfterTraining){ 
-                    
+                    //System.out.println("GPU Clock"+gpu.getTickTime());
                 }
                 gpu.getVRAM().clear(); 
                 
             }
-            System.out.println("After: "+gpu.getTickTime());
+            //System.out.println("After: "+gpu.getTickTime());
             i+=n;
-            System.out.println("sent to cluster " +n +" Databatchs" );
+            if(i+n > dataBatchs.length)
+                break;
+            //System.out.println("sent to cluster " +i +" Databatchs" );
         } 
        
-        
+        //TODO update cluster statistics while training
        
         
-        
+        //System.out.println("complete");
         
         //complete
         complete(event, gpu.getModel());
@@ -98,10 +100,12 @@ public class GPUService extends MicroService {
 
     }
     public void testModelEvent(TestModelEvent event){
-        gpu.setModel(event.getModel());
-        gpu.testModelEvent();
+        
+        //System.out.println("testing model:   "+event.getModel().getName());
+        gpu.testModelEvent(event.getModel());
+        //System.out.println(event.getModel().getResult());
         //complete
-        complete(event, gpu.getModel());
+        complete(event, event.getModel());
     
     }
     
@@ -109,8 +113,10 @@ public class GPUService extends MicroService {
     protected void initialize() {  
         subscribeBroadcast(TickBroadcast.class, call->{
             
-            gpu.advanceTick();
-            //System.out.println(gpu.getTickTime());
+                gpu.advanceTick();
+                //System.out.println("GPU timeeeeeeeee "+gpu.getTickTime());
+           
+            
         });
 
         subscribeEvent(TrainModelEvent.class, m->{

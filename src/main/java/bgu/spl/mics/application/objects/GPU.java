@@ -77,7 +77,7 @@ public class GPU {
 	 * @return how many {@link DataBatch}es to send (if any) >= 0
 	 */
 	public int numOfBatchesToSend(){
-		return VRAM.remainingCapacity();
+		return (VRAM.remainingCapacity())/2;
 	}
 
 	/**
@@ -140,8 +140,8 @@ public class GPU {
 	/**
 	 * @return model.getResult() == (Good|| Bad)
 	 */	
-	public Model.Result testModelEvent(){
-		return Result.Good;
+	public void testModelEvent(Model model){
+		model.setResult(Result.Good);//TODO add real random
 	}
 
 

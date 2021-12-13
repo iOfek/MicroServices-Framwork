@@ -20,7 +20,7 @@ public class Future<T> {
 	private T result;
 	boolean isDone;
 	
-
+	//TODO locks insted dull synchoriniztion
 	/**
 	 * This should be the the only public constructor in this class.
 	 */

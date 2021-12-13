@@ -20,7 +20,7 @@ public class Cluster implements Runnable{
 	private LinkedBlockingQueue<DataBatch> in, out;
 	// Consider Using SynchronousQueue which has at most one item
 	// it is used a way way to communicate between threads (e.g CPU and GPU)
-
+	//TODO statistics
 	/* 	
 	 * Statistics: You are free to choose how to implement this - It needs to hold the
 	 * following information: Names of all the models trained, Total number of data
@@ -33,8 +33,7 @@ public class Cluster implements Runnable{
      */
 
 	private static class SingletonHolder {
-		
-        private static Cluster instance = new Cluster( );
+        private static Cluster instance = new Cluster();
     }
 
 	public void addGpu(GPU gpu){
@@ -45,7 +44,7 @@ public class Cluster implements Runnable{
 	}
 
 	/**
-     * {@link Cluster}  public Constructor.
+     * {@link Cluster}  private Constructor.
      */
 	
 	private Cluster(){
@@ -92,8 +91,15 @@ public class Cluster implements Runnable{
 						//System.out.println("taking");
 						dataBatch  = in.poll();	
 						CPUs.getFirst().getDataBatchCollection().add(dataBatch);
+						
 						//round robin
 						CPU cpu = CPUs.removeFirst();
+						/* try {
+							cpu.proccessDataBatch();
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} */
 						CPUs.addLast(cpu);
 					}
 				}
@@ -102,6 +108,7 @@ public class Cluster implements Runnable{
 	
 			Thread t2 = new Thread(()->{
 				while(true){
+					
 					DataBatch dataBatch =null;
 					while(!out.isEmpty()){
 						//System.out.println("Sending");

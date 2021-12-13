@@ -17,28 +17,14 @@ import bgu.spl.mics.example.messages.ExampleBroadcast;
  * @param <T> */
 public class MessageBusImpl implements MessageBus {
 
-	private static MessageBusImpl instance = null;
-
-	
 
 	private HashMap<MicroService,LinkedBlockingQueue<Message>> sMap;
-
 	private HashMap<Class<? extends Event>,LinkedList<MicroService>> eMap;
-
 	private HashMap<Class<? extends Broadcast>,LinkedList<MicroService>> bMap;
-	
-	private HashMap<Class, Callback> classCallbackMap;
-
 	private HashMap<Event,Future> eventFutureMap;
 
 
-	 /**
-     * {@link MessageBusImpl} Singleton Holder.
-     */
-
-	private static class SingletonHolder {
-        private static MessageBusImpl instance = new MessageBusImpl();
-    }
+	
 
 	/**
      * {@link MessageBusImpl} Constructor.
@@ -48,52 +34,17 @@ public class MessageBusImpl implements MessageBus {
 	   sMap = new HashMap<MicroService,LinkedBlockingQueue<Message>>();
 	   eMap = new HashMap<Class<? extends Event>,LinkedList<MicroService>>();
 	   bMap = new HashMap<Class<? extends Broadcast>,LinkedList<MicroService>>();
-
-	   classCallbackMap = new HashMap<Class, Callback>();
-
 	   eventFutureMap = new HashMap<Event,Future>();
 	}
+	 /**
+     * {@link MessageBusImpl} Singleton Holder.
+     */
+
+	private static class SingletonHolder {
+        private static MessageBusImpl instance = new MessageBusImpl();
+    }
+
 	
-	public HashMap<Event, Future> getEventFutureMap() {
-		return eventFutureMap;
-	}
-
-	public void setEventFutureMap(HashMap<Event, Future> eventFutureMap) {
-		this.eventFutureMap = eventFutureMap;
-	}
-
-	public HashMap<Class, Callback> getClassCallbackMap() {
-		return classCallbackMap;
-	}
-
-	public void setclassCallbackMap(HashMap<Class, Callback> classCallbackMap) {
-		this.classCallbackMap = classCallbackMap;
-	}
-
-	public HashMap<MicroService, LinkedBlockingQueue<Message>> getsMap() {
-		return sMap;
-	}
-
-	public void setsMap(HashMap<MicroService, LinkedBlockingQueue<Message>> sMap) {
-		this.sMap = sMap;
-	}
-
-	public HashMap<Class<? extends Event>, LinkedList<MicroService>> geteMap() {
-		return eMap;
-	}
-
-	public void seteMap(HashMap<Class<? extends Event>, LinkedList<MicroService>> eMap) {
-		this.eMap = eMap;
-	}
-
-	public HashMap<Class<? extends Broadcast>, LinkedList<MicroService>> getbMap() {
-		return bMap;
-	}
-
-	public void setbMap(HashMap<Class<? extends Broadcast>, LinkedList<MicroService>> bMap) {
-		this.bMap = bMap;
-	}
-
 	/**
      * Retrieves the single instance of this class.
      */
@@ -102,8 +53,11 @@ public class MessageBusImpl implements MessageBus {
 		return SingletonHolder.instance;
 	}
 
+	//TODO add locks instead of full synchronization
+	
+
 	@Override
-	public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) throws IllegalStateException {
+	public synchronized <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) throws IllegalStateException {
 		if(!isMicroServiceRegistred(m))
 			throw new IllegalStateException();
 		if(!eMap.containsKey(type)){
@@ -113,7 +67,7 @@ public class MessageBusImpl implements MessageBus {
 	}
 
 	@Override
-	public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) throws IllegalStateException {
+	public synchronized void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) throws IllegalStateException {
 		if(!isMicroServiceRegistred(m))
 			throw new IllegalStateException();
 		if(!bMap.containsKey(type)){
@@ -129,18 +83,16 @@ public class MessageBusImpl implements MessageBus {
 	}
 
 	@Override
-	public void sendBroadcast(Broadcast b) {
+	public synchronized void sendBroadcast(Broadcast b) {
 		if(bMap.containsKey(b.getClass())){
 			for (MicroService m : bMap.get(b.getClass())) {
 				sMap.get(m).add(b);
 			}
 		}
-		
 	}
 
-	
 	@Override
-	public <T> Future<T> sendEvent(Event<T> e) {
+	public synchronized <T> Future<T> sendEvent(Event<T> e) {
 		if(eMap.get(e.getClass()).isEmpty())
 			return null;
 		// add event and corresponding future to mbus map
@@ -170,8 +122,8 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public Message awaitMessage(MicroService m) throws InterruptedException,IllegalStateException  {
-		if(!sMap.containsKey(m))
-		if(false)
+		
+		if(!isMicroServiceRegistred(m))
 			throw new IllegalStateException();
 		
 		Message message= null;
@@ -188,7 +140,28 @@ public class MessageBusImpl implements MessageBus {
 		return sMap.containsKey(m);
 	}
 
+
+
+	public HashMap<Event, Future> getEventFutureMap() {
+		return eventFutureMap;
+	}
+
+
+	public HashMap<MicroService, LinkedBlockingQueue<Message>> getsMap() {
+		return sMap;
+	}
+
 	
+
+	public HashMap<Class<? extends Event>, LinkedList<MicroService>> geteMap() {
+		return eMap;
+	}
+
+	
+
+	public HashMap<Class<? extends Broadcast>, LinkedList<MicroService>> getbMap() {
+		return bMap;
+	}
 
 
 }

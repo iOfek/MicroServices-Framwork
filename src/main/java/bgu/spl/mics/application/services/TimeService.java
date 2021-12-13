@@ -21,7 +21,7 @@ public class TimeService extends MicroService{
 	private int duration;
 	private TickBroadcast broadcast;
 
-	
+	//TODO constructor like cluster
 
 	private TimeService( int tickTime, int duration) {
 		super("Time Service");
@@ -35,7 +35,7 @@ public class TimeService extends MicroService{
      */
 
 	private static class SingletonHolder {
-        private static TimeService instance = new TimeService(1,5000);
+        private static TimeService instance = new TimeService(1,55000);
     }
 
 	/**
@@ -47,6 +47,7 @@ public class TimeService extends MicroService{
 		return SingletonHolder.instance;
 	}
 
+	//TODO termination tick
 	@Override
 	protected void initialize() {
 		Timer timer = new Timer("Time Service");

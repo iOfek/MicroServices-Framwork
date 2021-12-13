@@ -13,7 +13,7 @@ public class ConfrenceInformation {
     public ConfrenceInformation(String name, int date) {
         this.name = name;
         this.date = date;
-        this.tickTime = 1;
+        this.tickTime = 1;//TODO change to atomic
     }
 
     public int getTickTime(){

@@ -13,7 +13,7 @@ import bgu.spl.mics.application.objects.CPU;
  */
 public class CPUService extends MicroService {
 
-    private CPU cpu;
+    private volatile CPU cpu;
 
     public CPUService(String name,CPU cpu) {
         super(name);
@@ -23,9 +23,13 @@ public class CPUService extends MicroService {
     @Override
     protected void initialize() {
         subscribeBroadcast(TickBroadcast.class, call->{
-            cpu.advanceTick();
-            //System.out.println(cpu.getTickTime());
+            
+                cpu.advanceTick();
+                //System.out.println("CPU time "+cpu.getTickTime());
+            
+            
         });
+        //TODO update cluster statistics while training
         Thread t = new Thread(()->{
             while(true){
                 try {

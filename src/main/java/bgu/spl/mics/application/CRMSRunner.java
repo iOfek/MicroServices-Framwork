@@ -1,4 +1,5 @@
 package bgu.spl.mics.application;
+import java.lang.Thread.State;
 import java.util.LinkedList;
 import java.util.Vector;
 import java.util.concurrent.ExecutorCompletionService;
@@ -48,33 +49,54 @@ public class CRMSRunner {
         Student student2 = new Student("name", "CS", Student.Degree.MSc, 0, 0,models2);
         GPU gpu = new GPU(GPU.Type.RTX3090);
         CPU cpu = new CPU(32);
-        
+        CPU cpu2 = new CPU(32);
         Cluster cluster = Cluster.getInstance();
         cluster.addCpu(cpu);
-        cluster.addGpu(gpu);
+        cluster.addGpu(gpu); 
         TimeService timeService = TimeService.getInstance();
         StudentService studentService1 = new StudentService("student 1", student1);
         //StudentService studentService2 = new StudentService("student 2", student2);
         GPUService gpuService = new GPUService("GPU Service", gpu);
         CPUService cpuService = new CPUService("CPU Service",cpu);
+        CPUService cpuService2 = new CPUService("CPU Service2",cpu2);
 
-        ExecutorService e = Executors.newFixedThreadPool(4);
+        Thread t1 = new Thread(()->{cpuService.run();});
+        Thread t2 = new Thread(()->{gpuService.run();});
+        Thread t3 = new Thread(()->{cpuService2.run();});
+        Thread t4 = new Thread(()->{cluster.run();});
+        Thread t5  = new Thread(()->{timeService.run();});
+        Thread t6  = new Thread(()->{studentService1.run();});
+        //MessageBusImpl msb = MessageBusImpl.getInstance();
+        t1.start();
+        t2.start();
+        t3.start();
+        while(t1.getState()!= State.WAITING || t2 .getState()!= State.WAITING||t3 .getState()!= State.WAITING){
+            System.out.print("");
+        } 
+
+        /* try {
+            Thread.sleep(1000);
+            
+        } catch (Exception ex) {
+            //TODO: handle exception
+        }  */
+        t4.start();
+        t5.start();
+        t6.start();
+        /* ExecutorService e = Executors.newFixedThreadPool(5);
         e.submit(gpuService);
         e.submit(cpuService);
         e.submit(cluster);
         try {
-            Thread.sleep(1000);
+            Thread.sleep(6000);
             e.submit(timeService);
+            
+            e.submit(studentService1);
             
         } catch (Exception ex) {
             //TODO: handle exception
-        }
-        try {
-            Thread.sleep(2000);
-             e.submit(studentService1);
-        } catch (Exception ex) {
-            //TODO: handle exception
-        }
+        } */
+        
        
         //e.submit(studentService2);
 
