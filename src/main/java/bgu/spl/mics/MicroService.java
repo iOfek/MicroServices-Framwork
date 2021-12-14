@@ -185,5 +185,8 @@ public abstract class MicroService implements Runnable {
         }
         msb.unregister(this);
     }
+    private boolean terminated(){
+        return terminated;
+    }
 
 }

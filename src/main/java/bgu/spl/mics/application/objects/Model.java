@@ -34,11 +34,9 @@ public class Model {
      * {@link Model} Cosntructor 
      */
 
-    public Model(String name, Data data,  Status status, Result result){
+    public Model(String name, Data.Type type, int size){
         this.name = name;
-        this.data = data;
-        this.status = status;
-        this.result = result;
+        this.data = new Data(type, 0, size);
     }
 
 

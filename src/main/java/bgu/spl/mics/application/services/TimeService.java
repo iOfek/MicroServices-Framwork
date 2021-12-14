@@ -6,6 +6,7 @@ import java.util.TimerTask;
 
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.TickBroadcast;
+import bgu.spl.mics.application.objects.Cluster;
 
 /**
  * TimeService is the global system timer There is only one instance of this micro-service.
@@ -23,7 +24,12 @@ public class TimeService extends MicroService{
 
 	//TODO constructor like cluster
 
-	private TimeService( int tickTime, int duration) {
+	private TimeService( ) {
+		super("Time Service");
+		
+		broadcast = new TickBroadcast();
+	}
+	public TimeService( int tickTime, int duration) {
 		super("Time Service");
 		this.tickTime = tickTime;
 		this.duration = duration;
@@ -35,7 +41,7 @@ public class TimeService extends MicroService{
      */
 
 	private static class SingletonHolder {
-        private static TimeService instance = new TimeService(1,55000);
+        private static TimeService instance = new TimeService();
     }
 
 	/**
@@ -55,17 +61,22 @@ public class TimeService extends MicroService{
 			public void run(){
 				if(duration> 0){
 					sendBroadcast(broadcast);
+					//System.out.println("duration" +duration);
 					duration-=1;
 				}
 					
 				else{
-					terminate();
 					this.cancel();
+					sendBroadcast(null);
+					terminate();
+										
 				}
 			}
 		};
-		timer.scheduleAtFixedRate(t, 1, (long)tickTime);
-			
+		timer.scheduleAtFixedRate(t, 0, (long)tickTime);
+		// mmsb termitare all
+		
+	
 	}
 
 }

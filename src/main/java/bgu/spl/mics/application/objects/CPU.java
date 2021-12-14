@@ -15,6 +15,8 @@ public class CPU {
     private LinkedBlockingQueue<DataBatch> dataBatchCollection;
   	private Cluster cluster;
 	private AtomicInteger t = new AtomicInteger(1);
+	private DataBatch currentDataBatch;
+	private int timeToSend =-1;
 
 	/**
 	 * This should be the the only public constructor in this class.
@@ -55,18 +57,24 @@ public class CPU {
 	 * @post cluster.getOutQueue().contains({@code dataBatch}) == true
 	 * @post getTickTime() = pre.getTickTime() + CPUProcessingTimeInTicks(dataBatch) 
 	 */
-	public void proccessDataBatch() throws InterruptedException{
-		DataBatch dataBatch =  dataBatchCollection.take();
-		//System.out.println("CPU processing DB");
+	public  void proccessDataBatch() throws InterruptedException{
+		if(currentDataBatch == null){
+			currentDataBatch =  dataBatchCollection.take();
+			//System.out.println("CPU processing DB");
+			timeToSend = getTickTime()+CPUProcessingTimeInTicks(currentDataBatch);
+			/* System.out.println("Training time: "+CPUProcessingTimeInTicks(currentDataBatch));
+			System.out.println("send to clustre in time "+ timeToSend); */
+		}
 		
-			int currTime = getTickTime();
+		/* int currTime = getTickTime();
 			//System.out.println("CPU curr time: "+ currTime);
 
 			while(getTickTime()< currTime + CPUProcessingTimeInTicks(dataBatch)){
 				//System.out.print("");
 			}
-		
-		cluster.getOutQueue().add(dataBatch);
+		// add processed time to statistics
+		//cluster.addCpuTime(CPUProcessingTimeInTicks(dataBatch));
+		cluster.getOutQueue().add(dataBatch); */
 	}
 
 	
@@ -79,9 +87,23 @@ public class CPU {
 	/**
 	 * update CPU's tick Time
 	 * @param ticksToAdd ticks to add to CPU clock after opereation
+	 * @throws InterruptedException
 	 * @post getTickTime() = pre.getTickTime() + {@code ticksToAdd}
 	 */
-	public void advanceTick(){
+	public void advanceTick() throws InterruptedException{
+		proccessDataBatch();
+		//System.out.println("CPU processing DB");
+		
+		if(getTickTime() >= timeToSend){
+			//System.out.println("sent db to cluster");
+			cluster.sendDataBatchtoGPU(currentDataBatch);
+			//cluster.getOutQueue().add(currentDataBatch);
+			currentDataBatch=null;
+		}
+		
+		// add processed time to statistics
+		//cluster.addCpuTime(CPUProcessingTimeInTicks(dataBatch));
+		
 		t.incrementAndGet();
 	}
 

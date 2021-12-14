@@ -22,24 +22,13 @@ public class CPUService extends MicroService {
 
     @Override
     protected void initialize() {
-        subscribeBroadcast(TickBroadcast.class, call->{
-            
+        subscribeBroadcast(TickBroadcast.class, m->{
+            try {
                 cpu.advanceTick();
-                //System.out.println("CPU time "+cpu.getTickTime());
-            
-            
-        });
-        //TODO update cluster statistics while training
-        Thread t = new Thread(()->{
-            while(true){
-                try {
-                    cpu.proccessDataBatch();
-                } catch (InterruptedException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
             }
         });
-        t.start();
     }
 }

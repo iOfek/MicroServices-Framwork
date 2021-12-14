@@ -51,7 +51,7 @@ public class StudentService extends MicroService {
             } catch (Exception e) {
                 //TODO: handle exception
             }
-            System.out.println("Model result "+model.getResult());
+            System.out.println(model.getName() +"result "+model.getResult());
             //TODO PublishResultsEvent in student service
             /* //if model is good?
             if(model.getResult() == Result.Good)

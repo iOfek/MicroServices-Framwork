@@ -22,7 +22,14 @@ public class GPU {
 	private int dataBatchTrainingTime;
 	private volatile ArrayBlockingQueue<DataBatch> VRAM;
 	private AtomicInteger t = new AtomicInteger(1);
+	private int gpuId;
 	
+	public int getGpuID(){
+		return gpuId;
+	}
+	public void setGpuId(int gpuId){
+		this.gpuId = gpuId;
+	}
 
     /**
 	 * {@link GPU} Constructor
@@ -67,7 +74,9 @@ public class GPU {
 		int numOfDataBatches = data.getSize()/samplesize;
 		DataBatch[]GPUDataBatches = new DataBatch[numOfDataBatches];
 		for (int i = 0; i < GPUDataBatches.length; i++) {
-			GPUDataBatches[i] = new DataBatch(data, i*1000);
+			DataBatch dataBatch= new DataBatch(data, i*1000); 
+			dataBatch.setGpuId(gpuId);
+			GPUDataBatches[i] = dataBatch;
 		}
 		return GPUDataBatches;
 	}
@@ -93,7 +102,8 @@ public class GPU {
 		if(VRAM.remainingCapacity()<=1){
 			throw new IllegalStateException();
 		}			
-		cluster.getInQueue().add(dataBatch);
+		cluster.sendDataBatchtoCPU(dataBatch);
+		//cluster.getInQueue().add(dataBatch);
 		
 	}
 
@@ -164,6 +174,9 @@ public class GPU {
 	}
 	public void setModel(Model model){
 		this.model =model;
+	}
+	public Cluster getCluster(){
+		return cluster;
 	}
 
 }

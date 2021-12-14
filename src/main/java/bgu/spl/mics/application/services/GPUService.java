@@ -34,7 +34,7 @@ import bgu.spl.mics.application.objects.Data.Type;
  */
 public class GPUService extends MicroService {
 
-    private  GPU gpu;
+    private volatile GPU gpu;
     private LinkedBlockingQueue<TrainModelEvent> trainQueue;
     private LinkedBlockingQueue<TestModelEvent> testQueue;
     private Object lock = new Object();
@@ -47,8 +47,9 @@ public class GPUService extends MicroService {
         testQueue = new LinkedBlockingQueue<TestModelEvent>();         
     }
 
-    public void trainModelEvent(TrainModelEvent event){
-        //System.out.println( "GPU recieved "+ event.getModel().getName());
+    public synchronized void trainModelEvent(TrainModelEvent event){
+       // System.out.println( "GPU "+gpu.getGpuID()+" recieved "+ event.getModel().getName());
+        
         gpu.setModel(event.getModel());
         
         DataBatch[] dataBatchs = gpu.divideDataToDataBatches();
@@ -60,27 +61,30 @@ public class GPUService extends MicroService {
             int n = gpu.numOfBatchesToSend();
             //System.out.println("Sending " +n+ " batchs");
             for (int j = 0; j < n && j+i < dataBatchs.length; j++) {
+                //gpu.getCluster().sendDataBatchtoCPU(dataBatchs[i+j]);
                 gpu.sendUnproccessedDataBatchToCluster(dataBatchs[i+j]);
             }
 
-            synchronized (this){
+            //synchronized (this){
                 while(gpu.getVRAM().size()< n){
                     //System.out.println("VRAM size: "+gpu.getVRAM().size());
                 }
-            }
+            //}
             
 
             int timeAfterTraining = gpu.getTickTime()+gpu.trainingTime();
             
             //System.out.println("Before: "+gpu.getTickTime());
-            synchronized (lock){
+            //synchronized (lock){
                 //then train the proccessed data
                 while(gpu.getTickTime() < timeAfterTraining){ 
                     //System.out.println("GPU Clock"+gpu.getTickTime());
                 }
                 gpu.getVRAM().clear(); 
                 
-            }
+           // }
+            // add processed time to statistics
+            //gpu.getCluster().addGpuTime(gpu.trainingTime());
             //System.out.println("After: "+gpu.getTickTime());
             i+=n;
             if(i+n > dataBatchs.length)
@@ -95,11 +99,15 @@ public class GPUService extends MicroService {
         
         //complete
         complete(event, gpu.getModel());
+        // add name to statistics
+        gpu.getCluster().addTrainedModelName(gpu.getModel().getName());
+        //reset
+        gpu.getVRAM().clear();
         gpu.setModel(null);
         
 
     }
-    public void testModelEvent(TestModelEvent event){
+    public synchronized void testModelEvent(TestModelEvent event){
         
         //System.out.println("testing model:   "+event.getModel().getName());
         gpu.testModelEvent(event.getModel());
@@ -111,15 +119,12 @@ public class GPUService extends MicroService {
     
     @Override
     protected void initialize() {  
-        subscribeBroadcast(TickBroadcast.class, call->{
-            
-                gpu.advanceTick();
-                //System.out.println("GPU timeeeeeeeee "+gpu.getTickTime());
-           
-            
+        subscribeBroadcast(TickBroadcast.class, m->{
+            gpu.advanceTick();    
         });
 
         subscribeEvent(TrainModelEvent.class, m->{
+            //gpu not working on anything
             if(gpu.getModel()==null){
                 if(trainQueue.isEmpty()){
                     Thread eht = new Thread(()->{trainModelEvent(m);}); 

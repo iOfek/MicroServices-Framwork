@@ -33,6 +33,7 @@ public class GPUTest {
 
     @Test
     public void testTestModelEvent() {
+        
         Model.Result prob = gpu.testModelEvent();
         assertTrue((prob == Model.Result.Bad)||(prob == Model.Result.Good));
     }
