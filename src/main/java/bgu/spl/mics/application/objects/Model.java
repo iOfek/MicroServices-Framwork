@@ -26,17 +26,20 @@ public class Model {
 
     private String name;
     private Data data;
-    //private Student student;
     private Status status;
     private Result result;
 
+    private Data.Type type;
+    private int size;
     /**
      * {@link Model} Cosntructor 
      */
 
     public Model(String name, Data.Type type, int size){
         this.name = name;
-        this.data = new Data(type, 0, size);
+        this.data = new Data(type,0,size);
+        this.type=type;
+        this.size=size;
     }
 
 
@@ -54,6 +57,22 @@ public class Model {
 
     public Data getData(){
         return data;
+    }
+
+    /**
+     * @return {@link Model} object's size
+     */
+
+    public int getDataSize(){
+        return size;
+    }
+
+    /**
+     * @return {@link Model} object's {@link Data}
+     */
+
+    public Data.Type getDataType(){
+        return type;
     }
 
     /**

@@ -61,7 +61,6 @@ public class TimeService extends MicroService{
 			public void run(){
 				if(duration> 0){
 					sendBroadcast(broadcast);
-					//System.out.println("duration" +duration);
 					duration-=1;
 				}
 					

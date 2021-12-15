@@ -32,13 +32,11 @@ public class ConferenceService extends MicroService {
             broadcast.addModel(m.getModel());
         });
         subscribeBroadcast(TickBroadcast.class, m->{
+            conference.advanceTick();
             if(conference.getTickTime() >= conference.getDate()){
                 sendBroadcast(broadcast);
                 terminate();
-            }
-                
-            else    
-                conference.advanceTick();
+            }             
         });
         
     }

@@ -56,6 +56,7 @@ public class GPUService extends MicroService {
                     if(event.getClass() == TrainModelEvent.class){
                         gpu.setModel(((TrainModelEvent)event).getModel());
                         gpu.divideDataToDataBatches();
+                        System.out.println(gpu.getGpuID()+"started training "+ gpu.getModel().getName());
                     }
                     else if(event.getClass() == TestModelEvent.class){
                         Model model =gpu.testModelEvent(((TestModelEvent)event).getModel());
@@ -65,6 +66,7 @@ public class GPUService extends MicroService {
             }
             else if(gpu.getModel().getStatus() == Model.Status.Trained){
                 complete(eventQueue.poll(), gpu.getModel());
+                //System.out.println(gpu.getGpuID()+"completed trining "+ gpu.getModel().getName());
                 gpu.reset();
             }
             

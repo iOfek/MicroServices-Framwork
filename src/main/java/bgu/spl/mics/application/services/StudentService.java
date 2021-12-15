@@ -39,25 +39,25 @@ public class StudentService extends MicroService {
         for (Model model : student.getModels()) {
             
             Future<Model> future= sendEvent(new TrainModelEvent(model));
-            System.out.println(model.getName() + " sent for training! ");
+            //System.out.println(model.getName() + " sent for training! ");
             try {
                 model = future.get();
             } catch (Exception e) {
                 //TODO: handle exception
             }
-            System.out.println(model.getName() + " finished training! ");
-            System.out.println("Testing "+model.getName());
+           // System.out.println(model.getName() + " finished training! ");
+            //System.out.println("Testing "+model.getName());
             future= sendEvent(new TestModelEvent(model));
             try {
                 model = future.get();
             } catch (Exception e) {
                 //TODO: handle exception
             }
-            System.out.println(model.getName() +" result "+model.getResult());
+            //System.out.println(model.getName() +" result "+model.getResult());
             //TODO PublishResultsEvent in student service
             //if model is good?
             if(model.getResult() == Result.Good){
-                System.out.println("Publishing "+model.getName() +" result");
+                //System.out.println("Publishing "+model.getName() +" result");
                 sendEvent(new PublishResultsEvent(model));
                 student.addPublication();
             }    

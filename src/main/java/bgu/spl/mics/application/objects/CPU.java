@@ -98,6 +98,7 @@ public class CPU {
 		if(time >= timeToSend){
 			//System.out.println("sent db to cluster");
 			cluster.sendDataBatchtoGPU(currentDataBatch);
+			//System.out.println("processin");
 			cluster.addCpuTime(CPUProcessingTimeInTicks(currentDataBatch));
 			cluster.advanceNumberOfDatabatchsProcessedByCpus();
 			//cluster.getOutQueue().add(currentDataBatch);

@@ -19,6 +19,7 @@ public class Future<T> {
 	
 	private T result;
 	boolean isDone;
+	private Object lock = new Object();
 	
 	//TODO locks insted dull synchoriniztion
 	/**
@@ -40,10 +41,10 @@ public class Future<T> {
 	public T get() {
 		if(this.isDone())
 			return this.result;
-		synchronized(this){
+		synchronized(lock){
 			while(!this.isDone()){
 				try{
-					this.wait();
+					lock.wait();
 				}catch(InterruptedException e){}
 			}
 		}
@@ -58,12 +59,12 @@ public class Future<T> {
 	 * @pre isDone() == false
 	 * @post isDone() == true && this.get() == result
      */
-	public synchronized void resolve (T result) {
-		if(result!= null){
-			this.result = result;
-			this.isDone =true;
-			this.notifyAll();
-		}
+	public void resolve (T result) {
+			synchronized(lock){
+				this.isDone =true;
+				this.result = result;
+				lock.notifyAll();
+			}		
 	}
 	
 	/**
