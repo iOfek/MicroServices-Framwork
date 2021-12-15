@@ -68,16 +68,16 @@ public class Student {
         return publications;
     }
 
-    public void setPublications(int publications) {
-        this.publications = publications;
+    public void addPublication() {
+        this.publications +=1;
     }
 
     public int getPapersRead() {
         return papersRead;
     }
 
-    public void setPapersRead(int papersRead) {
-        this.papersRead = papersRead;
+    public void addPapersRead(int papersRead) {
+        this.papersRead += papersRead;
     }
     public Model[] getModels() {
         return models;

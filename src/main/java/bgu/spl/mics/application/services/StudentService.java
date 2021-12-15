@@ -31,9 +31,11 @@ public class StudentService extends MicroService {
 
     @Override
     protected void initialize() {
-        subscribeBroadcast(PublishConferenceBroadcast.class,call->{
-            
+        subscribeBroadcast(PublishConferenceBroadcast.class,m->{
+           int n =  m.getPublications()- student.getPublications();
+           student.addPapersRead(n);
         });
+
         for (Model model : student.getModels()) {
             
             Future<Model> future= sendEvent(new TrainModelEvent(model));
@@ -51,11 +53,14 @@ public class StudentService extends MicroService {
             } catch (Exception e) {
                 //TODO: handle exception
             }
-            System.out.println(model.getName() +"result "+model.getResult());
+            System.out.println(model.getName() +" result "+model.getResult());
             //TODO PublishResultsEvent in student service
-            /* //if model is good?
-            if(model.getResult() == Result.Good)
-                sendEvent(new PublishResultsEvent(model)); */
+            //if model is good?
+            if(model.getResult() == Result.Good){
+                System.out.println("Publishing "+model.getName() +" result");
+                sendEvent(new PublishResultsEvent(model));
+                student.addPublication();
+            }    
         }
         
 

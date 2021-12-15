@@ -92,11 +92,14 @@ public class CPU {
 	 */
 	public void advanceTick() throws InterruptedException{
 		proccessDataBatch();
-		//System.out.println("CPU processing DB");
 		
-		if(getTickTime() >= timeToSend){
+		//System.out.println("CPU processing DB");
+		int time =getTickTime();
+		if(time >= timeToSend){
 			//System.out.println("sent db to cluster");
 			cluster.sendDataBatchtoGPU(currentDataBatch);
+			cluster.addCpuTime(CPUProcessingTimeInTicks(currentDataBatch));
+			cluster.advanceNumberOfDatabatchsProcessedByCpus();
 			//cluster.getOutQueue().add(currentDataBatch);
 			currentDataBatch=null;
 		}

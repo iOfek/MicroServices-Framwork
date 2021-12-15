@@ -36,7 +36,7 @@ public class CPUTest {
     @Test
     public void testUpdateTickTime() {
         int time = cpu.getTickTime();
-        cpu.advanceTick();
+        //cpu.advanceTick();
         assertEquals(time + 1, cpu.getTickTime());
     }
     @Test

@@ -22,5 +22,8 @@ public class PublishConferenceBroadcast implements Broadcast{
     public void  addModel(Model model){
         models.add(model);
     }
+    public int getPublications(){
+        return models.size();
+    }
     
 }

@@ -1,9 +1,12 @@
 package bgu.spl.mics.application.objects;
 
+import java.util.Vector;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import bgu.spl.mics.application.objects.Model.Result;
+import bgu.spl.mics.application.objects.Model.Status;
 
 /**
  * Passive object representing a single GPU.
@@ -20,9 +23,14 @@ public class GPU {
 	private Model model;
     private Cluster cluster;
 	private int dataBatchTrainingTime;
-	private volatile ArrayBlockingQueue<DataBatch> VRAM;
+	private  ArrayBlockingQueue<DataBatch> VRAM;
 	private AtomicInteger t = new AtomicInteger(1);
-	private int gpuId;
+	private int gpuId; 
+	private DataBatch[] dataBatchs ;
+	private int trained =0;
+	private int totalBatchsSent=0;
+	private int numOfBatchsCurrentlyBeingProcessed=0;
+	private int processTime=0;
 	
 	public int getGpuID(){
 		return gpuId;
@@ -30,6 +38,7 @@ public class GPU {
 	public void setGpuId(int gpuId){
 		this.gpuId = gpuId;
 	}
+
 
     /**
 	 * {@link GPU} Constructor
@@ -41,54 +50,37 @@ public class GPU {
 		switch (this.type) {
 			case RTX3090:
 				dataBatchTrainingTime = 1;
-				setVRAMCapacity(32);
+				VRAM = new ArrayBlockingQueue<DataBatch>(32);
 				break;
 			case RTX2080:
 				dataBatchTrainingTime = 2;
-				setVRAMCapacity(16);
+				VRAM = new ArrayBlockingQueue<DataBatch>(16);
 				break;
 			case GTX1080:
 				dataBatchTrainingTime = 4;
-				setVRAMCapacity(8);
+				VRAM = new ArrayBlockingQueue<DataBatch>(8);
 				break;
 		}
 	}
 	
-	/**
-	 * Intialisze VRAM with capacity({@code VRAMCapacity})
-	 * @param VRAMCapacity VRAM Capacity
-	 */
-	public void setVRAMCapacity(int VRAMCapacity) {
-		VRAM = new ArrayBlockingQueue<DataBatch>(VRAMCapacity);
-	}
-
-	//public 
 
 	/** 
 	 * divdes {@link GPU}'s model.getData() into batches of 1000 samples({@link Data Batch} objects) and stores them in disk
 	 * @return  DataBatch[] of the the devided {@link GPU}'s model.getData()
 	 */
-	public DataBatch[] divideDataToDataBatches(){
+	public void divideDataToDataBatches(){
 		int samplesize = 1000;
 		Data data = model.getData();
 		int numOfDataBatches = data.getSize()/samplesize;
-		DataBatch[]GPUDataBatches = new DataBatch[numOfDataBatches];
-		for (int i = 0; i < GPUDataBatches.length; i++) {
+		dataBatchs = new DataBatch[numOfDataBatches];
+		for (int i = 0; i < numOfDataBatches; i++) {
 			DataBatch dataBatch= new DataBatch(data, i*1000); 
 			dataBatch.setGpuId(gpuId);
-			GPUDataBatches[i] = dataBatch;
+			dataBatchs[i] = dataBatch;
 		}
-		return GPUDataBatches;
 	}
 
-	/** Communicates with {@link Cluster} and decides how many {@link DataBatch}es to send (if any)
-	 * @param  data - the unprocessed {@link Data} 
-	 * @return how many {@link DataBatch}es to send (if any) >= 0
-	 */
-	public int numOfBatchesToSend(){
-		return (VRAM.remainingCapacity())/2;
-	}
-
+	
 	/**
 	 * send unproccessed {@code dataBatch} To Cluster
 	 * @throws IllegalStateException if VRAM.remainingCapacity()<=1
@@ -98,34 +90,14 @@ public class GPU {
 	 * @post cluster.getInQueue().contains({@code dataBatch}) == true
 	 */
 	
-	public void sendUnproccessedDataBatchToCluster(DataBatch dataBatch) throws IllegalStateException{
+	private void sendUnproccessedDataBatchToCluster(DataBatch dataBatch) throws IllegalStateException{
 		if(VRAM.remainingCapacity()<=1){
 			throw new IllegalStateException();
-		}			
+		}
+		totalBatchsSent+=1;		
+		numOfBatchsCurrentlyBeingProcessed+=1;	
 		cluster.sendDataBatchtoCPU(dataBatch);
-		//cluster.getInQueue().add(dataBatch);
 		
-	}
-
-
-	/**
-	 * 
-	 * @param  dataBatch - the {@link DataBatch} to be trained;
-	 * @inv  VRAM.remainingCapacity()>=0
-	 * @post getTickTime() = pre.getTickTime() + getDataBatchTrainingTime()
-	 * @post VRAM.size() = pre.VRAM.size()-1 && VRAM.contains({@code dataBatch}) == false
-	 * @post model.getData().getProccessed() == pre.model.getData().getProccessed()+1
-	 */	
-	public void trainDataBatch(DataBatch dataBatch){
-		
-		VRAM.remove(dataBatch);
-		model.getData().updateProcessed();
-	}
-
-
-
-	public int trainingTime(){
-		return dataBatchTrainingTime* VRAM.size();
 	}
 	
 	/**
@@ -135,23 +107,66 @@ public class GPU {
 		//return tickTime;
 		return t.get();
 	}
-
+/** Communicates with {@link Cluster} and decides how many {@link DataBatch}es to send (if any)
+	 * @param  data - the unprocessed {@link Data} 
+	 * @return how many {@link DataBatch}es to send (if any) >= 0
+	 */
+	public int numOfBatchesToSend(){
+		int initialCapacity = VRAM.size()+VRAM.remainingCapacity();
+		//System.out.println("sending "+(initialCapacity -numOfBatchsCurrentlyBeingProcessed-VRAM.size()));
+		return initialCapacity/2 -numOfBatchsCurrentlyBeingProcessed-VRAM.size() ;
+	}
 	/**
 	 * update GPU's tick Time
 	 * @param ticksToAdd ticks to add to GPU clock after opereation
 	 * @post getTickTime() = pre.getTickTime() + {@code ticksToAdd}
 	 */
-	public void advanceTick(){
-		//tickTime += ticksToAdd;
-		t.incrementAndGet();
+	public void reset(){
+		model =null;
+		numOfBatchsCurrentlyBeingProcessed=0;
+		totalBatchsSent =0;
+		trained =0;
 	}
 
+	
+	public void advanceTick(){
+		//tickTime += ticksToAdd;
+		if(model!= null){
+			for (int i = 0; i < numOfBatchesToSend()&& totalBatchsSent+i< dataBatchs.length; i++) {
+				sendUnproccessedDataBatchToCluster(dataBatchs[totalBatchsSent+i]);
+			}
+			trained +=trainModel();
+			//System.out.println("trained "+trained);
+			if(trained>= dataBatchs.length-1){
+				model.setStatus(Status.Trained);
+			}
+		}
+		t.incrementAndGet();
+		
+	}
+	public int trainModel(){
+		int trained =0;
+		int currTime = getTickTime();
+		if(!VRAM.isEmpty()){
+			processTime+=1;
+			if(processTime == dataBatchTrainingTime){
+				VRAM.remove();
+				processTime =0;
+				trained+=1;
+				model.getData().updateProcessed();
+				numOfBatchsCurrentlyBeingProcessed-=1;
+				cluster.addGpuTime(dataBatchTrainingTime);
+			}
+		}
+		return trained;
+	}
 
 	/**
 	 * @return model.getResult() == (Good|| Bad)
 	 */	
-	public void testModelEvent(Model model){
-		model.setResult(Result.Good);//TODO add real random
+	public Model testModelEvent(Model model){
+		model.setResult(Result.Good);
+		return model;//TODO add real random
 	}
 
 
@@ -178,5 +193,6 @@ public class GPU {
 	public Cluster getCluster(){
 		return cluster;
 	}
+
 
 }

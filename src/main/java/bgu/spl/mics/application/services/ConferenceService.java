@@ -24,10 +24,7 @@ public class ConferenceService extends MicroService {
         this.conference = conference;
         broadcast = new PublishConferenceBroadcast();
     }
-    //TODO aggregateResults
-    public void  aggregateResults(){
-
-    }
+    
     
     @Override
     protected void initialize() {

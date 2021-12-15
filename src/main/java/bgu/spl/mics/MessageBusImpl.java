@@ -85,8 +85,11 @@ public class MessageBusImpl implements MessageBus {
 	}
 
 	@Override
-	public <T> void complete(Event<T> e, T result) {
-		eventFutureMap.get(e).resolve(result);
+	public synchronized<T> void complete(Event<T> e, T result) {
+		if(!eventFutureMap.containsKey(e))
+			System.out.println("mo such event");
+		else	
+			eventFutureMap.get(e).resolve(result);
 	
 	}
 

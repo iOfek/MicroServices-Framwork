@@ -62,7 +62,7 @@ public class CRMSRunner {
         cluster.addGpu(gpu2); 
 
         
-        TimeService timeService = new TimeService(1, 10000);
+        TimeService timeService = new TimeService(1, 55000);
         StudentService studentService1 = new StudentService("student 1", student1);
         StudentService studentService2 = new StudentService("student 2", student2);
         GPUService gpuService = new GPUService("GPU Service", gpu);
@@ -80,7 +80,7 @@ public class CRMSRunner {
         Thread t6  = new Thread(()->{studentService1.run();});
         Thread t7  = new Thread(()->{studentService2.run();});
         //MessageBusImpl msb = MessageBusImpl.getInstance();
-        t0.start();
+        //t0.start();
         t1.start();
         t2.start();
         t3.start();

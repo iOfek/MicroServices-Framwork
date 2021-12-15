@@ -11,7 +11,13 @@ public class DataBatch {
     private Data data;
     private int start_index;
     private int gpuId;
-    
+    private int timeTrained;
+    public int getTimeTrained(){
+        return timeTrained;
+    }
+    public void setTimeTrained(int timeTrained){
+        this.timeTrained =timeTrained;
+    }
     /**
      * {@link DataBatch} Cosntructor 
      */

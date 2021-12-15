@@ -20,12 +20,12 @@ public class Cluster {
 	private Vector<GPU> GPUs;
 	
 	private LinkedList<CPU> CPUs;
-	private LinkedBlockingQueue<DataBatch> in, out;
+	/* private LinkedBlockingQueue<DataBatch> in, out; */
 	private LinkedBlockingQueue<String> trainedModelNames;
-	private AtomicInteger numberOfDataBatchesTrained = new AtomicInteger(0);
+	private AtomicInteger numberOfDatabatchsProcessedByCpus = new AtomicInteger(0);
 	private AtomicInteger cpuTimeUsed = new AtomicInteger(0);
 	private AtomicInteger gpuTimeUsed = new AtomicInteger(0);
-	private boolean terminated =false;			
+	/* private boolean terminated =false;		 */	
 
 	  
 	public void addTrainedModelName(String modelName){
@@ -36,6 +36,9 @@ public class Cluster {
 	}
 	public void addGpuTime(int gpuTime){
 		gpuTimeUsed.addAndGet(gpuTime);
+	}
+	public void advanceNumberOfDatabatchsProcessedByCpus(){
+		numberOfDatabatchsProcessedByCpus.incrementAndGet();
 	}
 
 	// Consider Using SynchronousQueue which has at most one item
@@ -60,6 +63,7 @@ public class Cluster {
 		gpu.setGpuId(GPUs.size());
 		GPUs.add(gpu);
 	}
+
 	public void addCpu(CPU cpu){
 		CPUs.addLast(cpu);
 	}
@@ -71,8 +75,8 @@ public class Cluster {
 	private Cluster(){
 		GPUs = new Vector<GPU>();
 		CPUs = new LinkedList<CPU>();
-		in = new LinkedBlockingQueue<DataBatch>();
-		out = new LinkedBlockingQueue<DataBatch>();
+/* 		in = new LinkedBlockingQueue<DataBatch>();
+		out = new LinkedBlockingQueue<DataBatch>(); */
 		trainedModelNames = new LinkedBlockingQueue<String>();
 	}
 	
@@ -88,32 +92,28 @@ public class Cluster {
 	/**
      * @return the CPUQueue}.
      */
-	public LinkedBlockingQueue<DataBatch> getInQueue(){
+	/* public LinkedBlockingQueue<DataBatch> getInQueue(){
 		return in;
-	}
+	} */
 
 	/**
      * @return the GPUQueue}.
      */
-	public LinkedBlockingQueue<DataBatch> getOutQueue(){
+	/* public LinkedBlockingQueue<DataBatch> getOutQueue(){
 		return out;
-	}
+	} */
 
-	public void terminate(){
-		terminated= true;
-	}
+
 
 	public void sendDataBatchtoGPU(DataBatch dataBatch){
-		GPUs.get(dataBatch.getGpuId()).getVRAM().add(dataBatch);
+		GPU gpu = GPUs.get(dataBatch.getGpuId());
+		gpu.getVRAM().add(dataBatch);
 	}
 
 	public synchronized void sendDataBatchtoCPU(DataBatch dataBatch){
 		// process data batchs in round-robin manner
 		CPUs.getFirst().getDataBatchCollection().add(dataBatch);
-		CPU cpu;
-		
-			cpu = CPUs.removeFirst();
-		
+		CPU cpu = CPUs.removeFirst();
 		CPUs.addLast(cpu);
 	}
 }		

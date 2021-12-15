@@ -1,4 +1,4 @@
-package bgu.spl.mics.application.objects;
+/* package bgu.spl.mics.application.objects;
 
 import org.junit.Before;
 import static org.junit.Assert.assertEquals;
@@ -77,3 +77,4 @@ public class GPUTest {
 
     }
 }
+ */
