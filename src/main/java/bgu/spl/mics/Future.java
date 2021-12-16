@@ -41,10 +41,10 @@ public class Future<T> {
 	public T get() {
 		if(this.isDone())
 			return this.result;
-		synchronized(lock){
+		synchronized(this){
 			while(!this.isDone()){
 				try{
-					lock.wait();
+					this.wait();
 				}catch(InterruptedException e){}
 			}
 		}
@@ -60,10 +60,10 @@ public class Future<T> {
 	 * @post isDone() == true && this.get() == result
      */
 	public void resolve (T result) {
-			synchronized(lock){
+			synchronized(this){
 				this.isDone =true;
 				this.result = result;
-				lock.notifyAll();
+				this.notifyAll();
 			}		
 	}
 	

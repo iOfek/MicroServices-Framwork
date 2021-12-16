@@ -59,10 +59,10 @@ public class CPU {
 	 */
 	public  void proccessDataBatch() throws InterruptedException{
 		if(currentDataBatch == null){
-			currentDataBatch =  dataBatchCollection.take();
-			//System.out.println("CPU processing DB");
-			timeToSend = getTickTime()+CPUProcessingTimeInTicks(currentDataBatch);
-			/* System.out.println("Training time: "+CPUProcessingTimeInTicks(currentDataBatch));
+			if(!dataBatchCollection.isEmpty()){
+				currentDataBatch =  dataBatchCollection.poll();
+				timeToSend = getTickTime()+CPUProcessingTimeInTicks(currentDataBatch);
+			}/* System.out.println("Training time: "+CPUProcessingTimeInTicks(currentDataBatch));
 			System.out.println("send to clustre in time "+ timeToSend); */
 		}
 		
@@ -91,19 +91,21 @@ public class CPU {
 	 * @post getTickTime() = pre.getTickTime() + {@code ticksToAdd}
 	 */
 	public void advanceTick() throws InterruptedException{
+
 		proccessDataBatch();
-		
-		//System.out.println("CPU processing DB");
-		int time =getTickTime();
-		if(time >= timeToSend){
-			//System.out.println("sent db to cluster");
-			cluster.sendDataBatchtoGPU(currentDataBatch);
-			//System.out.println("processin");
-			cluster.addCpuTime(CPUProcessingTimeInTicks(currentDataBatch));
-			cluster.advanceNumberOfDatabatchsProcessedByCpus();
-			//cluster.getOutQueue().add(currentDataBatch);
-			currentDataBatch=null;
+		if(currentDataBatch!= null){
+			int time =getTickTime();
+			if(time >= timeToSend){
+				//System.out.println("sent db to cluster");
+				cluster.sendDataBatchtoGPU(currentDataBatch);
+				//System.out.println("processin");
+				cluster.addCpuTime(CPUProcessingTimeInTicks(currentDataBatch));
+				cluster.advanceNumberOfDatabatchsProcessedByCpus();
+				//cluster.getOutQueue().add(currentDataBatch);
+				currentDataBatch=null;
+			}
 		}
+		
 		
 		// add processed time to statistics
 		//cluster.addCpuTime(CPUProcessingTimeInTicks(dataBatch));

@@ -114,7 +114,9 @@ public class GPU {
 	public int numOfBatchesToSend(){
 		int initialCapacity = VRAM.size()+VRAM.remainingCapacity();
 		//System.out.println("sending "+(initialCapacity -numOfBatchsCurrentlyBeingProcessed-VRAM.size()));
-		return initialCapacity/2 -numOfBatchsCurrentlyBeingProcessed-VRAM.size() ;
+		int x = initialCapacity/2 -numOfBatchsCurrentlyBeingProcessed-VRAM.size() ;
+		//int min = Math.min(4, x);
+		return x;
 	}
 	/**
 	 * update GPU's tick Time
@@ -132,12 +134,26 @@ public class GPU {
 	public void advanceTick(){
 		//tickTime += ticksToAdd;
 		if(model!= null){
-			for (int i = 0; i < numOfBatchesToSend()&& totalBatchsSent+i< dataBatchs.length; i++) {
-				sendUnproccessedDataBatchToCluster(dataBatchs[totalBatchsSent+i]);
+			int n = numOfBatchesToSend();
+			int copyTotalBatchsSent = totalBatchsSent;
+			for (int i = copyTotalBatchsSent; i < (n + copyTotalBatchsSent) &&  i< dataBatchs.length; i++) {
+				//System.out.println("GPU "+gpuId+" send db number "+i);
+				sendUnproccessedDataBatchToCluster(dataBatchs[i]);
 			}
+			 while(VRAM.size()==0){
+				try {
+					Thread.sleep(5);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			} 
+			
 			trained +=trainModel();
 			//System.out.println("trained "+trained);
 			if(trained>= dataBatchs.length-1){
+				//System.out.println("total size"+model.getDataSize());
 				model.setStatus(Status.Trained);
 			}
 		}
@@ -155,7 +171,8 @@ public class GPU {
 				trained+=1;
 				model.getData().updateProcessed();
 				numOfBatchsCurrentlyBeingProcessed-=1;
-				cluster.addGpuTime(dataBatchTrainingTime);
+				cluster.addGpuTime(gpuId,dataBatchTrainingTime);
+				cluster.printStatistics();
 			}
 		}
 		return trained;

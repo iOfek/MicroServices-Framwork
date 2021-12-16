@@ -25,8 +25,14 @@ public class Cluster {
 	private AtomicInteger numberOfDatabatchsProcessedByCpus = new AtomicInteger(0);
 	private AtomicInteger cpuTimeUsed = new AtomicInteger(0);
 	private AtomicInteger gpuTimeUsed = new AtomicInteger(0);
+	private Vector <Integer> processTime;
 	/* private boolean terminated =false;		 */	
-
+	public void printStatistics(){
+		//System.out.println("time "+gpuTimeUsed.get());
+/* 		for (int i = 0; i < processTime.size(); i++) {
+			System.out.println("GPU "+i+" processed time "+processTime.get(i));
+		} */
+	}
 	  
 	public void addTrainedModelName(String modelName){
 		trainedModelNames.add(modelName);
@@ -34,8 +40,10 @@ public class Cluster {
 	public void addCpuTime(int cpuTime){
 		cpuTimeUsed.addAndGet(cpuTime);
 	}
-	public void addGpuTime(int gpuTime){
+	public void addGpuTime(int gpuId, int gpuTime){
 		gpuTimeUsed.addAndGet(gpuTime);
+		int n = processTime.get(gpuId);
+		processTime.set(gpuId, new Integer(n+1));
 	}
 	public void advanceNumberOfDatabatchsProcessedByCpus(){
 		numberOfDatabatchsProcessedByCpus.incrementAndGet();
@@ -62,6 +70,7 @@ public class Cluster {
 	public void addGpu(GPU gpu){
 		gpu.setGpuId(GPUs.size());
 		GPUs.add(gpu);
+		processTime.add(0);
 	}
 
 	public void addCpu(CPU cpu){
@@ -75,6 +84,7 @@ public class Cluster {
 	private Cluster(){
 		GPUs = new Vector<GPU>();
 		CPUs = new LinkedList<CPU>();
+		processTime = new Vector<Integer>();
 /* 		in = new LinkedBlockingQueue<DataBatch>();
 		out = new LinkedBlockingQueue<DataBatch>(); */
 		trainedModelNames = new LinkedBlockingQueue<String>();

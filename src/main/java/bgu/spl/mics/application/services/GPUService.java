@@ -14,6 +14,7 @@ import bgu.spl.mics.Message;
 import bgu.spl.mics.MessageBus;
 import bgu.spl.mics.MessageBusImpl;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.KillEmAllBroadcast;
 import bgu.spl.mics.application.messages.TestModelEvent;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.messages.TrainModelEvent;
@@ -48,29 +49,37 @@ public class GPUService extends MicroService {
     
     @Override
     protected void initialize() {  
+        
         subscribeBroadcast(TickBroadcast.class, m->{
+           
+                
             Event event =null;
-            if(gpu.getModel()== null){                
+            if(gpu.getModel()== null){
+                for (Event test : eventQueue) {
+                    if(test.getClass()== TestModelEvent.class){
+                        Model model =gpu.testModelEvent(((TestModelEvent)test).getModel());
+                        complete(eventQueue.poll(),model);
+                    }
+                }                
                 if(!eventQueue.isEmpty()){
                     event = eventQueue.peek();
                     if(event.getClass() == TrainModelEvent.class){
                         gpu.setModel(((TrainModelEvent)event).getModel());
                         gpu.divideDataToDataBatches();
-                        System.out.println(gpu.getGpuID()+"started training "+ gpu.getModel().getName());
+                        //System.out.println(gpu.getGpuID()+"started training "+ gpu.getModel().getName());
                     }
-                    else if(event.getClass() == TestModelEvent.class){
-                        Model model =gpu.testModelEvent(((TestModelEvent)event).getModel());
-                        complete(eventQueue.poll(),model);
-                    }
+                   
                 }
             }
             else if(gpu.getModel().getStatus() == Model.Status.Trained){
                 complete(eventQueue.poll(), gpu.getModel());
+                
                 //System.out.println(gpu.getGpuID()+"completed trining "+ gpu.getModel().getName());
                 gpu.reset();
             }
-            
+            //System.out.println(gpu.getTickTime());
             gpu.advanceTick();
+            
             
         });
 
@@ -80,6 +89,14 @@ public class GPUService extends MicroService {
         
         subscribeEvent(TestModelEvent.class, m->{
             eventQueue.add(m);
+            /* if(gpu.getModel()== null){
+                for (Event test : eventQueue) {
+                    if(test.getClass()== TestModelEvent.class){
+                        Model model =gpu.testModelEvent(((TestModelEvent)test).getModel());
+                        complete(eventQueue.poll(),model);
+                    }
+                } 
+            } */
         });
     }
 }

@@ -1,5 +1,6 @@
 package bgu.spl.mics;
 
+import java.sql.Time;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.HashMap;
@@ -7,8 +8,14 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.omg.PortableServer.THREAD_POLICY_ID;
+
 import bgu.spl.mics.example.messages.ExampleEvent;
+import bgu.spl.mics.application.messages.KillEmAllBroadcast;
 import bgu.spl.mics.application.objects.Model;
+import bgu.spl.mics.application.objects.Student;
+import bgu.spl.mics.application.services.GPUService;
+import bgu.spl.mics.application.services.StudentService;
 import bgu.spl.mics.application.services.TimeService;
 import bgu.spl.mics.example.messages.ExampleBroadcast;
 
@@ -26,8 +33,11 @@ public class MessageBusImpl implements MessageBus {
 	private HashMap<Class<? extends Event>,LinkedList<MicroService>> eMap;
 	private HashMap<Class<? extends Broadcast>,LinkedList<MicroService>> bMap;
 	private HashMap<Event,Future> eventFutureMap;
-	private Object eventLock = new Object();
-	private Object broadcastLock = new Object();
+	private Object sMapLock = new Object();
+	private Object eMapLock = new Object();
+	private Object bMapLock = new Object();
+	private Object eventFutureMapLock = new Object();
+
 	
 
 
@@ -67,10 +77,12 @@ public class MessageBusImpl implements MessageBus {
 	public synchronized <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) throws IllegalStateException {
 			if(!isMicroServiceRegistred(m))
 				throw new IllegalStateException();
-			if(!eMap.containsKey(type)){
-				eMap.put(type, new LinkedList<MicroService>());
-			}
-			eMap.get(type).add(m);
+				if(!eMap.containsKey(type)){
+					eMap.put(type, new LinkedList<MicroService>());
+				}
+				eMap.get(type).add(m);
+				
+			
 		
 	}
 
@@ -78,15 +90,16 @@ public class MessageBusImpl implements MessageBus {
 	public  synchronized void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) throws IllegalStateException {
 			if(!isMicroServiceRegistred(m))
 				throw new IllegalStateException();
-			if(!bMap.containsKey(type)){
-				bMap.put(type, new LinkedList<MicroService>());
-			}
-			bMap.get(type).add(m);	
-		
+				if(!bMap.containsKey(type)){
+					bMap.put(type, new LinkedList<MicroService>());
+				}
+				bMap.get(type).add(m);
+			
+	
 	}
 
 	@Override
-	public <T> void complete(Event<T> e, T result) {
+	public synchronized <T> void complete(Event<T> e, T result) {
 		if(!eventFutureMap.containsKey(e))
 			System.out.println("mo such event");
 		else	
@@ -95,91 +108,96 @@ public class MessageBusImpl implements MessageBus {
 	}
 
 	@Override
-	public  synchronized void sendBroadcast(Broadcast b) {
-		if(b==null){
-			System.out.println("terminate all");
-			for (MicroService m : sMap.keySet()) {
-				if(m.getClass()!= TimeService.class){
-					System.out.println("terminating "+m.getName());
-					m.terminate();
+	public synchronized void sendBroadcast(Broadcast b) {
+		if(b.getClass() == KillEmAllBroadcast.class){
+
+				for (MicroService m : sMap.keySet()) {
+					
+
+					sMap.get(m).clear();
+					sMap.get(m).add(b);
+					
+					
+						
 				}
-			}
-			
+				
+				
 		}
+			
+		
 		else{
-			synchronized(bMap){
 				if(bMap.containsKey(b.getClass())){
 					for (MicroService m : bMap.get(b.getClass())) {
-						synchronized(sMap){
-							synchronized(m){
-								sMap.get(m).add(b);
-							}
-						}	
-					}					
-				}
-			}
+							sMap.get(m).add(b);
+					} 
+				}	
 		}
+			
 		
+					
+					
 	}
 
 	@Override
-	public <T> Future<T> sendEvent(Event<T> e) {
-			synchronized(eMap){
-			if(eMap.get(e.getClass()).isEmpty())
-				return null;}
+	public synchronized <T> Future<T> sendEvent(Event<T> e) {
+				if(eMap.get(e.getClass()).isEmpty())
+				return null;
 			// add event and corresponding future to mbus map
 			Future<T> future = new Future<T>();
-			synchronized(eventFutureMap){
-				eventFutureMap.put(e, future);
-			}
+			eventFutureMap.put(e, future);
+
 			//round-robin 
 			MicroService m;
-			synchronized(eMap){
 				m = eMap.get(e.getClass()).removeFirst();
-				synchronized(m){
-					eMap.get(e.getClass()).addLast(m);
-				}
-			}
+				eMap.get(e.getClass()).addLast(m);
+			
+
 			// add event to microservice's messega-queue
-			synchronized(sMap){
 				sMap.get(m).add(e);
-			}
+			
+
+			
 			return eventFutureMap.get(e);
 		
+			
 	}
 
 	@Override
-	public  void register(MicroService m) {
+	public synchronized void register(MicroService m) {
 		
 		if(isMicroServiceRegistred(m))
 			throw new IllegalStateException();
-
 		sMap.put(m, new LinkedBlockingQueue<Message>());
+		
+
 		
 	}
 		
 
 	@Override
-	public synchronized  void unregister(MicroService m) {
-		
+	public synchronized void unregister(MicroService m) {
 		if(!isMicroServiceRegistred(m)) 
 			throw new IllegalStateException();
-		synchronized(sMap){
-			synchronized(m){
-				sMap.remove(m);
+		//remove microservice's messageQueue 
+			sMap.remove(m);
+		
+
+		// unsunscribe to subscribed Events
+			for (Class e:eMap.keySet() ) {
+					eMap.get(e).remove(m);
 			}
-		}	
-		synchronized(bMap){
-			synchronized(m){
+		
+		// unsunscribe to subscribed Broadcasts
 			for (Class b:bMap.keySet() ) {
 				bMap.get(b).remove(m);
 			}
-		}
-		}			
+		
+
+					
 	}
 
 	@Override
-	public Message awaitMessage(MicroService m) throws InterruptedException,IllegalStateException  {
+	public  Message awaitMessage(MicroService m) throws InterruptedException,IllegalStateException  {
 		
 		if(!isMicroServiceRegistred(m))
 			throw new IllegalStateException();
@@ -200,26 +218,13 @@ public class MessageBusImpl implements MessageBus {
 
 
 
-	public HashMap<Event, Future> getEventFutureMap() {
-		return eventFutureMap;
+	@Override
+	public <T> boolean isThereAMicroserviceSubscribedToEventType(Class<? extends Event> class1) {
+		if(eMap.containsKey(class1) && eMap.get(class1).size()>0)
+			return true;
+		return false;
 	}
 
-
-	public HashMap<MicroService, LinkedBlockingQueue<Message>> getsMap() {
-		return sMap;
-	}
-
-	
-
-	public HashMap<Class<? extends Event>, LinkedList<MicroService>> geteMap() {
-		return eMap;
-	}
-
-	
-
-	public HashMap<Class<? extends Broadcast>, LinkedList<MicroService>> getbMap() {
-		return bMap;
-	}
 
 
 }

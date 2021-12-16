@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.KillEmAllBroadcast;
 import bgu.spl.mics.application.messages.PublishConferenceBroadcast;
 import bgu.spl.mics.application.messages.PublishResultsEvent;
 import bgu.spl.mics.application.messages.TickBroadcast;
@@ -28,6 +29,7 @@ public class ConferenceService extends MicroService {
     
     @Override
     protected void initialize() {
+        
         subscribeEvent(PublishResultsEvent.class, m->{
             broadcast.addModel(m.getModel());
         });

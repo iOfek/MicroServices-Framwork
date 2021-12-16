@@ -7,6 +7,13 @@ import java.util.LinkedList;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import bgu.spl.mics.application.messages.KillEmAllBroadcast;
+import bgu.spl.mics.application.messages.TickBroadcast;
+import bgu.spl.mics.application.messages.TrainModelEvent;
+import bgu.spl.mics.application.services.StudentService;
+import bgu.spl.mics.application.services.TimeService;
 
 /**
  * The MicroService is an abstract class that any micro-service in the system
@@ -28,6 +35,7 @@ import java.util.concurrent.Executors;
  */
 public abstract class MicroService implements Runnable {
 
+    //private AtomicBoolean terminated = new AtomicBoolean(false);
     private boolean terminated = false;
     private final String name;
     private MessageBusImpl msb;
@@ -92,7 +100,7 @@ public abstract class MicroService implements Runnable {
     protected final <B extends Broadcast> void subscribeBroadcast(Class<B> type, Callback<B> callback) {
         msb.subscribeBroadcast(type, this);
         //store callback
-        classCallbackMap.putIfAbsent(type, callback);     
+        classCallbackMap.put(type, callback);     
         
         
     }   
@@ -111,7 +119,7 @@ public abstract class MicroService implements Runnable {
      */
     protected final <T> Future<T> sendEvent(Event<T> e) {
         Future<T> future =  msb.sendEvent(e);
-        if(!msb.geteMap().containsKey(e.getClass()))
+        if(!msb.isThereAMicroserviceSubscribedToEventType(e.getClass()))
             return null;
         return future; 
     }
@@ -149,8 +157,10 @@ public abstract class MicroService implements Runnable {
      * Signals the event loop that it must terminate after handling the current
      * message.
      */
-    protected final void terminate() {
+    public final void terminate() {
         this.terminated = true;
+        
+       //terminated.set(true);
     }
 
     /**
@@ -167,10 +177,24 @@ public abstract class MicroService implements Runnable {
      */
     @Override
     public final void run() {
+        
         msb.register(this);
+        
+        subscribeBroadcast(KillEmAllBroadcast.class, m -> {
+            terminate();
+            if(this.getClass() == StudentService.class){
+                this.notifyAll();
+                // for (Future future : ((StudentService)this).getFutures()) {
+                //     future.notifyAll();
+                // }
+            }
+        });    
+        
+        
         System.out.println("Intiilaizing "+name+"...");
         initialize();
-        while (!terminated) {
+    
+        while (!terminated ) {
             
            
             try {
@@ -180,13 +204,15 @@ public abstract class MicroService implements Runnable {
             } catch (IllegalStateException e) {
                 e.printStackTrace();
             } catch (InterruptedException e) {
+               
                 e.printStackTrace();
-            }
+            }//System.out.println("sddddddd");
         }
+
+        System.out.println("Terminated "+ getName());
         msb.unregister(this);
+
     }
-    private boolean terminated(){
-        return terminated;
-    }
+    
 
 }

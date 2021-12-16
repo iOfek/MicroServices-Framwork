@@ -126,6 +126,11 @@ public interface MessageBus {
      * @return true if {@link MicroService} {@code m} is registerd, false otherwise
      */
     boolean isMicroServiceRegistred(MicroService m);
-
+    /** 
+     * @param <T>
+     * @param type the class of Class<? extends Event<T>>
+     * @return true if there is {@link MicroService} {@code m} subscribed to {@code type}, false otherwise
+     */
+    <T> boolean isThereAMicroserviceSubscribedToEventType(Class<? extends Event> class1);
     
 }

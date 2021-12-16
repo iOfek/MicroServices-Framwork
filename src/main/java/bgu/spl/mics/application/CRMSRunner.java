@@ -113,19 +113,85 @@ public class CRMSRunner {
         }
 
 
-
-
-        for(Thread gpuT:gpuThreads) {
+         for(Thread gpuT:gpuThreads) {
             gpuT.start();
         }
         for(Thread cpuT:cpuThreads) {
             cpuT.start();
         }
-        for(Thread conT:conferenceThreads) {
-            conT.start();
-        } 
-
+        //  for(Thread conT:conferenceThreads) {
+        //     conT.start();
+        // }  
+        for(Thread cpuT:cpuThreads) {
+            while (!(cpuT.getState() == Thread.State.WAITING) ) {
+                //System.out.println("waiting for gpu thread to be in wait state");
+            }
+        }
         for(Thread gpuT:gpuThreads) {
+            while (!(gpuT.getState() == Thread.State.WAITING)) {
+                //System.out.println("waiting for gpu thread to be in wait state");
+            }
+        } 
+        
+        
+        /* for(Thread conT:conferenceThreads) {
+            while (!(conT.getState() == Thread.State.WAITING)) {
+                //System.out.println("waiting for gpu thread to be in wait state");
+            }
+        }  */
+
+        //studentThreads.getFirst().start();
+        
+        for(Thread studentT:studentThreads){
+            studentT.start();
+        } 
+         for(Thread studentT:studentThreads){
+            while (!(studentT.getState() == Thread.State.WAITING)) {
+                //System.out.println("waiting for gpu thread to be in wait state");
+            }
+        } 
+        Thread ts = new Thread(()->{timeService.run();});
+        //Thread.sleep(8000);
+         ts.start();
+        ts.join(); 
+        
+        for(Thread gpuT:gpuThreads) {
+            gpuT.join();
+        }
+        for(Thread cpuT:cpuThreads) {
+            cpuT.join();
+        }
+        //  for(Thread studentThread:studentThreads) {
+        //     studentThread.interrupt();
+        // }
+        /*
+        for(Thread cpuT:cpuThreads) {
+            cpuT.join();
+        } */
+        System.out.println("FINIS");
+        
+        /*  for(Thread gpuT:gpuThreads) {
+            System.out.println(gpuT.getState()); 
+        }
+        for(Thread cpuT:cpuThreads) {
+            System.out.println(cpuT.getState()); 
+        } */
+        //ts.stop();
+        
+        
+        /* for(Thread studentT:studentThreads){
+            studentT.interrupt();
+        }
+        for(Thread gpuT:gpuThreads) {
+            gpuT.interrupt();
+        }
+        for(Thread cpuT:cpuThreads) {
+            cpuT.interrupt();
+        }
+        for(Thread conT:conferenceThreads) {
+            conT.interrupt();
+        }  */
+        /* for(Thread gpuT:gpuThreads) {
             while (!(gpuT.getState() == Thread.State.WAITING)) {
                 //System.out.println("waiting for gpu thread to be in wait state");
             }
@@ -139,16 +205,7 @@ public class CRMSRunner {
             while (!(conT.getState() == Thread.State.WAITING)) {
                 //System.out.println("waiting for gpu thread to be in wait state");
             }
-        } 
-
-        
-        for(Thread studentT:studentThreads){
-            studentT.start();
-        }
-        Thread ts = new Thread(()->{timeService.run();});
-        Thread.sleep(8000);
-        ts.start();
-
+        }  */
 
          
         

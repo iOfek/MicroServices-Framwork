@@ -4,7 +4,9 @@ import java.sql.Time;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import bgu.spl.mics.Broadcast;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.KillEmAllBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.objects.Cluster;
 
@@ -53,29 +55,41 @@ public class TimeService extends MicroService{
 		return SingletonHolder.instance;
 	}
 
+	public void reduceDuration(){
+		this.duration-=1;
+	}
+
 	//TODO termination tick
 	@Override
 	protected void initialize() {
-		Timer timer = new Timer("Time Service");
+		Timer	 timer = new Timer("Time Service");
 		TimerTask t = new TimerTask() {
 			public void run(){
-				if(duration> 0){
+				//System.out.println("AFter");
+				if(duration> 1){
 					sendBroadcast(broadcast);
-					duration-=1;
+					reduceDuration();
+					//System.out.println("s");
 				}
-					
+				
 				else{
-					this.cancel();
-					sendBroadcast(null);
+					System.out.println("Bye");this.cancel();
+					
+					sendBroadcast(new KillEmAllBroadcast());
 					terminate();
+					timer.cancel();
+					Thread.interrupted();
+
+					//
 										
 				}
 			}
 		};
-		timer.scheduleAtFixedRate(t, 0, (long)tickTime);
-		// mmsb termitare all
 		
-	
+		timer.scheduleAtFixedRate(t, 0, (long)tickTime);
+		
+		
+		//t
 	}
 
 }
