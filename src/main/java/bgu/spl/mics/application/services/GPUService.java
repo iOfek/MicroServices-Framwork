@@ -48,7 +48,14 @@ public class GPUService extends MicroService {
 
     
     @Override
-    protected void initialize() {  
+    protected void initialize() { 
+        subscribeBroadcast(KillEmAllBroadcast.class, m -> {
+            terminate();
+            while(!eventQueue.isEmpty())
+                complete(eventQueue.poll(), null);
+            gpu.reset();
+            
+        });  
         
         subscribeBroadcast(TickBroadcast.class, m->{
            

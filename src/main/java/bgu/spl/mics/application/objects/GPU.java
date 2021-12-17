@@ -140,7 +140,7 @@ public class GPU {
 				//System.out.println("GPU "+gpuId+" send db number "+i);
 				sendUnproccessedDataBatchToCluster(dataBatchs[i]);
 			}
-			 while(VRAM.size()==0){
+			 /* while(VRAM.size()==0){
 				try {
 					Thread.sleep(5);
 				} catch (InterruptedException e) {
@@ -148,7 +148,7 @@ public class GPU {
 					e.printStackTrace();
 				}
 				
-			} 
+			} */ 
 			
 			trained +=trainModel();
 			//System.out.println("trained "+trained);

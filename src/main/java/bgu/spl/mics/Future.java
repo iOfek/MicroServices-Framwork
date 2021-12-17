@@ -41,10 +41,10 @@ public class Future<T> {
 	public T get() {
 		if(this.isDone())
 			return this.result;
-		synchronized(this){
+		synchronized(lock){
 			while(!this.isDone()){
 				try{
-					this.wait();
+					lock.wait();
 				}catch(InterruptedException e){}
 			}
 		}
@@ -60,10 +60,10 @@ public class Future<T> {
 	 * @post isDone() == true && this.get() == result
      */
 	public void resolve (T result) {
-			synchronized(this){
+			synchronized(lock){
 				this.isDone =true;
 				this.result = result;
-				this.notifyAll();
+				lock.notifyAll();
 			}		
 	}
 	
@@ -89,10 +89,17 @@ public class Future<T> {
 	public T get(long timeout, TimeUnit unit) {
 		if(this.isDone())
 			return this.result;
-		try{
-			Thread.sleep(unit.toMillis(timeout));
+		synchronized(lock){
+			while(!isDone()){
+				try {
+					lock.wait(timeout);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			
 		}
-		catch(Exception e){}
 		return this.result;	
 	}
 }

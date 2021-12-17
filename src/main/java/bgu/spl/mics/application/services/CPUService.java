@@ -24,6 +24,10 @@ public class CPUService extends MicroService {
     @Override
     protected void initialize() {
       
+        subscribeBroadcast(KillEmAllBroadcast.class, m -> {
+            terminate();
+            
+        }); 
         
         subscribeBroadcast(TickBroadcast.class, m->{
             try {

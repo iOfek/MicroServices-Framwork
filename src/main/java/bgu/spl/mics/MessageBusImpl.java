@@ -83,7 +83,6 @@ public class MessageBusImpl implements MessageBus {
 				eMap.get(type).add(m);
 				
 			
-		
 	}
 
 	@Override
@@ -140,7 +139,7 @@ public class MessageBusImpl implements MessageBus {
 
 	@Override
 	public synchronized <T> Future<T> sendEvent(Event<T> e) {
-				if(eMap.get(e.getClass()).isEmpty())
+			if(eMap.get(e.getClass()).isEmpty())
 				return null;
 			// add event and corresponding future to mbus map
 			Future<T> future = new Future<T>();

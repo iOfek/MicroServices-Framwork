@@ -85,8 +85,10 @@ public class CRMSRunner {
         LinkedList<Thread> cpuThreads = new LinkedList<>();
         LinkedList<Thread> conferenceThreads = new LinkedList<>();
         LinkedList<Thread> studentThreads = new LinkedList<>();
-        TimeService timeService=new TimeService(tickTime,duration);
 
+        TimeService timeService= TimeService.getInstance();
+        timeService.setDuration(duration);
+        timeService.setTicktime(tickTime);
         for(int i=0;i<gpus.length;i++) {
             GPUService gpuService=new GPUService("GPU Service "+ i,gpus[i]);
             gpuThreads.add(new Thread(()->{gpuService.run();}));
@@ -119,9 +121,9 @@ public class CRMSRunner {
         for(Thread cpuT:cpuThreads) {
             cpuT.start();
         }
-        //  for(Thread conT:conferenceThreads) {
-        //     conT.start();
-        // }  
+         for(Thread conT:conferenceThreads) {
+            conT.start();
+        }  
         for(Thread cpuT:cpuThreads) {
             while (!(cpuT.getState() == Thread.State.WAITING) ) {
                 //System.out.println("waiting for gpu thread to be in wait state");
@@ -134,80 +136,54 @@ public class CRMSRunner {
         } 
         
         
-        /* for(Thread conT:conferenceThreads) {
+        for(Thread conT:conferenceThreads) {
             while (!(conT.getState() == Thread.State.WAITING)) {
                 //System.out.println("waiting for gpu thread to be in wait state");
             }
-        }  */
-
-        //studentThreads.getFirst().start();
+        } 
         
+        
+        
+
+
         for(Thread studentT:studentThreads){
             studentT.start();
+
         } 
-         for(Thread studentT:studentThreads){
+        for(Thread studentT:gpuThreads) {
             while (!(studentT.getState() == Thread.State.WAITING)) {
                 //System.out.println("waiting for gpu thread to be in wait state");
             }
         } 
+
+
         Thread ts = new Thread(()->{timeService.run();});
         //Thread.sleep(8000);
          ts.start();
+        /* while (!(ts.getState() == Thread.State.WAITING)) {
+            //System.out.println("waiting for gpu thread to be in wait state");
+        } */
         ts.join(); 
-        
+
+         
+
         for(Thread gpuT:gpuThreads) {
             gpuT.join();
         }
         for(Thread cpuT:cpuThreads) {
             cpuT.join();
         }
-        //  for(Thread studentThread:studentThreads) {
-        //     studentThread.interrupt();
-        // }
-        /*
-        for(Thread cpuT:cpuThreads) {
-            cpuT.join();
-        } */
+        for(Thread studentT:studentThreads){
+            studentT.join();
+        } 
+        
+        for(Thread conT:conferenceThreads) {
+            conT.join();
+        } 
+
         System.out.println("FINIS");
         
-        /*  for(Thread gpuT:gpuThreads) {
-            System.out.println(gpuT.getState()); 
-        }
-        for(Thread cpuT:cpuThreads) {
-            System.out.println(cpuT.getState()); 
-        } */
-        //ts.stop();
-        
-        
-        /* for(Thread studentT:studentThreads){
-            studentT.interrupt();
-        }
-        for(Thread gpuT:gpuThreads) {
-            gpuT.interrupt();
-        }
-        for(Thread cpuT:cpuThreads) {
-            cpuT.interrupt();
-        }
-        for(Thread conT:conferenceThreads) {
-            conT.interrupt();
-        }  */
-        /* for(Thread gpuT:gpuThreads) {
-            while (!(gpuT.getState() == Thread.State.WAITING)) {
-                //System.out.println("waiting for gpu thread to be in wait state");
-            }
-        }
-        for(Thread cpuT:cpuThreads) {
-            while (!(cpuT.getState() == Thread.State.WAITING)) {
-                //System.out.println("waiting for gpu thread to be in wait state");
-            }
-        }
-        for(Thread conT:conferenceThreads) {
-            while (!(conT.getState() == Thread.State.WAITING)) {
-                //System.out.println("waiting for gpu thread to be in wait state");
-            }
-        }  */
-
-         
+                
         
 
     }

@@ -157,7 +157,7 @@ public abstract class MicroService implements Runnable {
      * Signals the event loop that it must terminate after handling the current
      * message.
      */
-    public final void terminate() {
+    protected final void terminate() {
         this.terminated = true;
         
        //terminated.set(true);
@@ -180,15 +180,7 @@ public abstract class MicroService implements Runnable {
         
         msb.register(this);
         
-        subscribeBroadcast(KillEmAllBroadcast.class, m -> {
-            terminate();
-            if(this.getClass() == StudentService.class){
-                this.notifyAll();
-                // for (Future future : ((StudentService)this).getFutures()) {
-                //     future.notifyAll();
-                // }
-            }
-        });    
+          
         
         
         System.out.println("Intiilaizing "+name+"...");
@@ -206,7 +198,8 @@ public abstract class MicroService implements Runnable {
             } catch (InterruptedException e) {
                
                 e.printStackTrace();
-            }//System.out.println("sddddddd");
+            }
+            
         }
 
         System.out.println("Terminated "+ getName());

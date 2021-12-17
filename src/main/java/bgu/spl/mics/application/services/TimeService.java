@@ -28,14 +28,20 @@ public class TimeService extends MicroService{
 
 	private TimeService( ) {
 		super("Time Service");
-		
 		broadcast = new TickBroadcast();
 	}
+	
 	public TimeService( int tickTime, int duration) {
 		super("Time Service");
 		this.tickTime = tickTime;
 		this.duration = duration;
 		broadcast = new TickBroadcast();
+	}
+	public void  setTicktime(int tickTime){
+		this.tickTime =tickTime;
+	}
+	public void  setDuration(int duration){
+		this.duration =duration;
 	}
 
 	 /**
@@ -62,6 +68,10 @@ public class TimeService extends MicroService{
 	//TODO termination tick
 	@Override
 	protected void initialize() {
+		subscribeBroadcast(KillEmAllBroadcast.class, m -> {
+            terminate();
+            
+        }); 
 		Timer	 timer = new Timer("Time Service");
 		TimerTask t = new TimerTask() {
 			public void run(){
@@ -69,7 +79,7 @@ public class TimeService extends MicroService{
 				if(duration> 1){
 					sendBroadcast(broadcast);
 					reduceDuration();
-					//System.out.println("s");
+					//System.out.println(duration);
 				}
 				
 				else{
@@ -78,7 +88,7 @@ public class TimeService extends MicroService{
 					sendBroadcast(new KillEmAllBroadcast());
 					terminate();
 					timer.cancel();
-					Thread.interrupted();
+					//Thread.interrupted();
 
 					//
 										
@@ -89,7 +99,11 @@ public class TimeService extends MicroService{
 		timer.scheduleAtFixedRate(t, 0, (long)tickTime);
 		
 		
-		//t
+		
+	}
+	public int calculateTimeLeft() {
+		//System.out.println("time left "+ (duration));
+		return duration;
 	}
 
 }

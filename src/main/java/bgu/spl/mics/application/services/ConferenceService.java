@@ -29,6 +29,10 @@ public class ConferenceService extends MicroService {
     
     @Override
     protected void initialize() {
+        subscribeBroadcast(KillEmAllBroadcast.class, m -> {
+            terminate();
+            
+        }); 
         
         subscribeEvent(PublishResultsEvent.class, m->{
             broadcast.addModel(m.getModel());
