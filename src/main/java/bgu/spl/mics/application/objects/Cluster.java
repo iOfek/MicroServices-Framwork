@@ -28,10 +28,13 @@ public class Cluster {
 	private Vector <Integer> processTime;
 	/* private boolean terminated =false;		 */	
 	public void printStatistics(){
-		//System.out.println("time "+gpuTimeUsed.get());
-/* 		for (int i = 0; i < processTime.size(); i++) {
+		System.out.println("GPU Time "+gpuTimeUsed.get());
+		System.out.println("CPU Time "+cpuTimeUsed.get());
+		System.out.println("Number Of Databatchs Processed By Cpus "+numberOfDatabatchsProcessedByCpus.get());
+		for (int i = 0; i < processTime.size(); i++) {
 			System.out.println("GPU "+i+" processed time "+processTime.get(i));
-		} */
+		} 
+
 	}
 	  
 	public void addTrainedModelName(String modelName){

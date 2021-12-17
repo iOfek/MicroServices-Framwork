@@ -5,6 +5,7 @@ import bgu.spl.mics.application.messages.KillEmAllBroadcast;
 import bgu.spl.mics.application.messages.PublishConferenceBroadcast;
 import bgu.spl.mics.application.messages.PublishResultsEvent;
 import bgu.spl.mics.application.messages.TickBroadcast;
+import bgu.spl.mics.application.objects.Cluster;
 import bgu.spl.mics.application.objects.ConfrenceInformation;
 
 /**
@@ -30,6 +31,7 @@ public class ConferenceService extends MicroService {
     @Override
     protected void initialize() {
         subscribeBroadcast(KillEmAllBroadcast.class, m -> {
+            
             terminate();
             
         }); 
@@ -42,6 +44,7 @@ public class ConferenceService extends MicroService {
             if(conference.getTickTime() >= conference.getDate()){
                 sendBroadcast(broadcast);
                 terminate();
+                Cluster.getInstance().printStatistics();
             }             
         });
         

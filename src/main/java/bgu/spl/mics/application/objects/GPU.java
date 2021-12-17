@@ -24,14 +24,14 @@ public class GPU {
     private Cluster cluster;
 	private int dataBatchTrainingTime;
 	private  ArrayBlockingQueue<DataBatch> VRAM;
-	private AtomicInteger t = new AtomicInteger(1);
+	//private AtomicInteger t = new AtomicInteger(1);
 	private int gpuId; 
 	private DataBatch[] dataBatchs ;
 	private int trained =0;
 	private int totalBatchsSent=0;
 	private int numOfBatchsCurrentlyBeingProcessed=0;
 	private int processTime=0;
-	
+	private int tickTime=0;
 	public int getGpuID(){
 		return gpuId;
 	}
@@ -104,8 +104,8 @@ public class GPU {
 	 * @return {@link GPU} tick time 
 	 */
 	public int getTickTime(){
-		//return tickTime;
-		return t.get();
+		return tickTime;
+		//return t.get();
 	}
 /** Communicates with {@link Cluster} and decides how many {@link DataBatch}es to send (if any)
 	 * @param  data - the unprocessed {@link Data} 
@@ -115,7 +115,7 @@ public class GPU {
 		int initialCapacity = VRAM.size()+VRAM.remainingCapacity();
 		//System.out.println("sending "+(initialCapacity -numOfBatchsCurrentlyBeingProcessed-VRAM.size()));
 		int x = initialCapacity/2 -numOfBatchsCurrentlyBeingProcessed-VRAM.size() ;
-		//int min = Math.min(4, x);
+		
 		return x;
 	}
 	/**
@@ -140,24 +140,24 @@ public class GPU {
 				//System.out.println("GPU "+gpuId+" send db number "+i);
 				sendUnproccessedDataBatchToCluster(dataBatchs[i]);
 			}
-			 /* while(VRAM.size()==0){
-				try {
-					Thread.sleep(5);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-			} */ 
-			
+			//   if(VRAM.size()==0){
+			// 	 try {
+			// 		Thread.currentThread().sleep(0, 2);
+			// 	} catch (InterruptedException e) {
+			// 		// TODO Auto-generated catch block
+			// 		e.printStackTrace();
+			// 	}
+			// }
 			trained +=trainModel();
+			
 			//System.out.println("trained "+trained);
 			if(trained>= dataBatchs.length-1){
 				//System.out.println("total size"+model.getDataSize());
 				model.setStatus(Status.Trained);
 			}
+		
 		}
-		t.incrementAndGet();
+		tickTime+=1;
 		
 	}
 	public int trainModel(){
@@ -171,8 +171,7 @@ public class GPU {
 				trained+=1;
 				model.getData().updateProcessed();
 				numOfBatchsCurrentlyBeingProcessed-=1;
-				cluster.addGpuTime(gpuId,dataBatchTrainingTime);
-				cluster.printStatistics();
+				cluster.addGpuTime(gpuId,1);
 			}
 		}
 		return trained;
@@ -183,6 +182,7 @@ public class GPU {
 	 */	
 	public Model testModelEvent(Model model){
 		model.setResult(Result.Good);
+		model.setStatus(Status.Tested);
 		return model;//TODO add real random
 	}
 

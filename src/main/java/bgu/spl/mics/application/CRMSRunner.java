@@ -182,7 +182,14 @@ public class CRMSRunner {
         } 
 
         System.out.println("FINIS");
-        
+        cluster.printStatistics();
+        for (Student student : students) {
+            System.out.println(student.getName());
+            for (Model model : student.getModels()) {
+                System.out.println("Model "+model.getName()+" Status: "+model.getStatus() +" Result: "+model.getResult() +" Published" );
+            }
+            System.out.println("Papers Read: "+student.getPapersRead());
+        }
                 
         
 

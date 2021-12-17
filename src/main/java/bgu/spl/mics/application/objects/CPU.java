@@ -14,10 +14,10 @@ public class CPU {
     private int cores;
     private LinkedBlockingQueue<DataBatch> dataBatchCollection;
   	private Cluster cluster;
-	private AtomicInteger t = new AtomicInteger(1);
+	//private AtomicInteger t = new AtomicInteger(1);
 	private DataBatch currentDataBatch;
 	private int timeToSend =-1;
-
+	private int tickTime =0;
 	/**
 	 * This should be the the only public constructor in this class.
 	 */
@@ -82,7 +82,8 @@ public class CPU {
 	 * @return {@link CPU} tick time 
 	 */
 	public int getTickTime(){
-		return t.get();
+		return tickTime;
+		//return t.get();
 	}
 	/**
 	 * update CPU's tick Time
@@ -99,7 +100,7 @@ public class CPU {
 				//System.out.println("sent db to cluster");
 				cluster.sendDataBatchtoGPU(currentDataBatch);
 				//System.out.println("processin");
-				cluster.addCpuTime(CPUProcessingTimeInTicks(currentDataBatch));
+				cluster.addCpuTime(1);
 				cluster.advanceNumberOfDatabatchsProcessedByCpus();
 				//cluster.getOutQueue().add(currentDataBatch);
 				currentDataBatch=null;
@@ -109,8 +110,8 @@ public class CPU {
 		
 		// add processed time to statistics
 		//cluster.addCpuTime(CPUProcessingTimeInTicks(dataBatch));
-		
-		t.incrementAndGet();
+		tickTime+=1;
+		//t.incrementAndGet();
 	}
 
 	/**

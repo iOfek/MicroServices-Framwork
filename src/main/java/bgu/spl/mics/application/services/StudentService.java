@@ -13,6 +13,7 @@ import bgu.spl.mics.application.objects.ConfrenceInformation;
 import bgu.spl.mics.application.objects.Model;
 import bgu.spl.mics.application.objects.Student;
 import bgu.spl.mics.application.objects.Model.Result;
+import bgu.spl.mics.application.objects.Model.Status;
 
 /**
  * Student is responsible for sending the {@link TrainModelEvent},
@@ -48,26 +49,27 @@ public class StudentService extends MicroService {
         }); 
 
         for (Model model : student.getModels()) {
-    
+            Model modelCopy = model;
             
             Future<Model> future= sendEvent(new TrainModelEvent(model));
-            
-            model = future.get();
+            model.setStatus(Status.Training);
+            modelCopy = future.get();
          
 
             
-            if(model == null)
+            if(modelCopy == null)
                 break;
-           
+            model.setStatus(Status.Trained);
             System.out.println(model.getName() + " finished training! ");
             
             
             System.out.println("Testing "+model.getName());
             future= sendEvent(new TestModelEvent(model));
             
-            model = future.get();
-            if(model == null)
+            modelCopy = future.get();
+            if(modelCopy == null)
                 break;
+            model = modelCopy;
             System.out.println(model.getName() +" result "+model.getResult());
             //TODO PublishResultsEvent in student service
             //if model is good?
