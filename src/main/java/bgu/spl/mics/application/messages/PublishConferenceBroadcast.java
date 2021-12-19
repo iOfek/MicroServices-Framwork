@@ -1,11 +1,12 @@
 package bgu.spl.mics.application.messages;
-
+/* 
 import java.util.LinkedList;
 
-import javax.jws.WebParam.Mode;
+import javax.jws.WebParam.Mode; */
 
 import bgu.spl.mics.Broadcast;
-import bgu.spl.mics.application.objects.Model;
+import bgu.spl.mics.application.objects.ConfrenceInformation;
+/* import bgu.spl.mics.application.objects.Model; */
 
 /**
  * Sent by the conference at a set time (according to
@@ -14,16 +15,14 @@ import bgu.spl.mics.application.objects.Model;
  */
 
 public class PublishConferenceBroadcast implements Broadcast{
-    private LinkedList<Model> models;
+    private ConfrenceInformation confrence;
 
-    public PublishConferenceBroadcast() {
-        models = new LinkedList<Model>();
+    public PublishConferenceBroadcast(ConfrenceInformation confrence) {
+        this.confrence = confrence;
     }
-    public void  addModel(Model model){
-        models.add(model);
-    }
-    public int getPublications(){
-        return models.size();
+    
+    public ConfrenceInformation getConfrence(){
+        return confrence;
     }
     
 }

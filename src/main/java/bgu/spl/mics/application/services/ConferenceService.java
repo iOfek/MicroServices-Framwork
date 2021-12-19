@@ -5,7 +5,6 @@ import bgu.spl.mics.application.messages.KillEmAllBroadcast;
 import bgu.spl.mics.application.messages.PublishConferenceBroadcast;
 import bgu.spl.mics.application.messages.PublishResultsEvent;
 import bgu.spl.mics.application.messages.TickBroadcast;
-import bgu.spl.mics.application.objects.Cluster;
 import bgu.spl.mics.application.objects.ConfrenceInformation;
 
 /**
@@ -18,13 +17,11 @@ import bgu.spl.mics.application.objects.ConfrenceInformation;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class ConferenceService extends MicroService {
-    private PublishConferenceBroadcast broadcast;
     private ConfrenceInformation conference;
 
     public ConferenceService(String name,ConfrenceInformation conference) {
         super(name);
         this.conference = conference;
-        broadcast = new PublishConferenceBroadcast();
     }
     
     
@@ -37,14 +34,15 @@ public class ConferenceService extends MicroService {
         }); 
         
         subscribeEvent(PublishResultsEvent.class, m->{
-            broadcast.addModel(m.getModel());
+            this.conference.addModel(m.getModel());
+            m.getModel().getStudent().addPublication(m.getModel());
         });
+        
         subscribeBroadcast(TickBroadcast.class, m->{
             conference.advanceTick();
             if(conference.getTickTime() >= conference.getDate()){
-                sendBroadcast(broadcast);
+                sendBroadcast(new PublishConferenceBroadcast(conference));
                 terminate();
-                Cluster.getInstance().printStatistics();
             }             
         });
         

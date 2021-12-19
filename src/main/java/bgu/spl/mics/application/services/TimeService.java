@@ -7,6 +7,7 @@ import java.util.TimerTask;
 import bgu.spl.mics.Broadcast;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.KillEmAllBroadcast;
+import bgu.spl.mics.application.messages.StudentStartBroadcast;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.objects.Cluster;
 
@@ -23,8 +24,6 @@ public class TimeService extends MicroService{
 	private int tickTime;
 	private int duration;
 	private TickBroadcast broadcast;
-
-	//TODO constructor like cluster
 
 	private TimeService( ) {
 		super("Time Service");
@@ -65,7 +64,6 @@ public class TimeService extends MicroService{
 		this.duration-=1;
 	}
 
-	//TODO termination tick
 	@Override
 	protected void initialize() {
 		subscribeBroadcast(KillEmAllBroadcast.class, m -> {
@@ -75,34 +73,26 @@ public class TimeService extends MicroService{
 		Timer	 timer = new Timer("Time Service");
 		TimerTask t = new TimerTask() {
 			public void run(){
-				//System.out.println("AFter");
 				if(duration> 1){
 					sendBroadcast(broadcast);
 					reduceDuration();
-					//System.out.println(duration);
 				}
 				
 				else{
-					System.out.println("Bye");this.cancel();
-					
+					this.cancel();
 					sendBroadcast(new KillEmAllBroadcast());
 					terminate();
-					timer.cancel();
-					//Thread.interrupted();
-
-					//
-										
+					timer.cancel();	
 				}
 			}
 		};
-		
+		sendBroadcast(new StudentStartBroadcast());
 		timer.scheduleAtFixedRate(t, 0, (long)tickTime);
 		
 		
 		
 	}
 	public int calculateTimeLeft() {
-		//System.out.println("time left "+ (duration));
 		return duration;
 	}
 

@@ -7,6 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import bgu.spl.mics.application.objects.Model.Result;
 import bgu.spl.mics.application.objects.Model.Status;
+import bgu.spl.mics.application.objects.Student.Degree;
 
 /**
  * Passive object representing a single GPU.
@@ -114,8 +115,8 @@ public class GPU {
 	public int numOfBatchesToSend(){
 		int initialCapacity = VRAM.size()+VRAM.remainingCapacity();
 		//System.out.println("sending "+(initialCapacity -numOfBatchsCurrentlyBeingProcessed-VRAM.size()));
-		int x = initialCapacity/2 -numOfBatchsCurrentlyBeingProcessed-VRAM.size() ;
-		
+		int x = VRAM.remainingCapacity()-1 -numOfBatchsCurrentlyBeingProcessed ;
+		//int min = Math.min(x, 2);
 		return x;
 	}
 	/**
@@ -128,6 +129,7 @@ public class GPU {
 		numOfBatchsCurrentlyBeingProcessed=0;
 		totalBatchsSent =0;
 		trained =0;
+		processTime=0;
 	}
 
 	
@@ -140,18 +142,11 @@ public class GPU {
 				//System.out.println("GPU "+gpuId+" send db number "+i);
 				sendUnproccessedDataBatchToCluster(dataBatchs[i]);
 			}
-			//   if(VRAM.size()==0){
-			// 	 try {
-			// 		Thread.currentThread().sleep(0, 2);
-			// 	} catch (InterruptedException e) {
-			// 		// TODO Auto-generated catch block
-			// 		e.printStackTrace();
-			// 	}
-			// }
+		
 			trained +=trainModel();
 			
 			//System.out.println("trained "+trained);
-			if(trained>= dataBatchs.length-1){
+			if(trained== dataBatchs.length){
 				//System.out.println("total size"+model.getDataSize());
 				model.setStatus(Status.Trained);
 			}
@@ -171,7 +166,8 @@ public class GPU {
 				trained+=1;
 				model.getData().updateProcessed();
 				numOfBatchsCurrentlyBeingProcessed-=1;
-				cluster.addGpuTime(gpuId,1);
+				cluster.addGpuTime(gpuId);
+				//System.out.println("GPU "+gpuId+ "Trained DB from "+ model.getName());
 			}
 		}
 		return trained;
@@ -181,10 +177,28 @@ public class GPU {
 	 * @return model.getResult() == (Good|| Bad)
 	 */	
 	public Model testModelEvent(Model model){
-		model.setResult(Result.Good);
+		double rnd=Math.random();
+		if(model.getStudent().getStatus()==Degree.PhD){
+			if(rnd<0.2){
+				model.setResult(Result.Bad);
+			}
+			else{
+				model.setResult(Result.Good);
+			}
+		}
+		else{
+			if(rnd<0.4){
+				model.setResult(Result.Bad);
+			}
+			else{
+				model.setResult(Result.Good);
+			}
+		}
 		model.setStatus(Status.Tested);
-		return model;//TODO add real random
+
+		return model;
 	}
+
 
 
 	/**
@@ -209,6 +223,10 @@ public class GPU {
 	}
 	public Cluster getCluster(){
 		return cluster;
+	}
+
+	public void addDataBatchToVRAM(DataBatch dataBatch){
+		VRAM.add(dataBatch);
 	}
 
 

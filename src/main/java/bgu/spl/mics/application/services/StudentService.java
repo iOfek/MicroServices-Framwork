@@ -1,14 +1,15 @@
 package bgu.spl.mics.application.services;
 
-import java.util.concurrent.TimeUnit;
 
 import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.KillEmAllBroadcast;
 import bgu.spl.mics.application.messages.PublishConferenceBroadcast;
 import bgu.spl.mics.application.messages.PublishResultsEvent;
+import bgu.spl.mics.application.messages.StudentStartBroadcast;
 import bgu.spl.mics.application.messages.TestModelEvent;
 import bgu.spl.mics.application.messages.TrainModelEvent;
+import bgu.spl.mics.application.objects.Cluster;
 import bgu.spl.mics.application.objects.ConfrenceInformation;
 import bgu.spl.mics.application.objects.Model;
 import bgu.spl.mics.application.objects.Student;
@@ -39,48 +40,43 @@ public class StudentService extends MicroService {
     protected void initialize() {
         
         subscribeBroadcast(PublishConferenceBroadcast.class,m->{
-           int n =  m.getPublications()- student.getPublications();
-           student.addPapersRead(n);
+            ConfrenceInformation c = m.getConfrence();
+            student.addPapersRead(c.getModels().size());
         }); 
 
         subscribeBroadcast(KillEmAllBroadcast.class, m -> {
+            student.setPapersRead();
+
             terminate();
             
         }); 
 
-        for (Model model : student.getModels()) {
-            Model modelCopy = model;
+        subscribeBroadcast(StudentStartBroadcast.class, m->{
+            for (Model model : student.getModels()) {
+                Model modelCopy = model;
+                Future<Model> future= sendEvent(new TrainModelEvent(model));
+                model.setStatus(Status.Training);
+                
+                modelCopy = future.get();
             
-            Future<Model> future= sendEvent(new TrainModelEvent(model));
-            model.setStatus(Status.Training);
-            modelCopy = future.get();
-         
+                if(modelCopy == null)
+                    break;
 
-            
-            if(modelCopy == null)
-                break;
-            model.setStatus(Status.Trained);
-            System.out.println(model.getName() + " finished training! ");
-            
-            
-            System.out.println("Testing "+model.getName());
-            future= sendEvent(new TestModelEvent(model));
-            
-            modelCopy = future.get();
-            if(modelCopy == null)
-                break;
-            model = modelCopy;
-            System.out.println(model.getName() +" result "+model.getResult());
-            //TODO PublishResultsEvent in student service
-            //if model is good?
-            if(model.getResult() == Result.Good){
-                System.out.println("Publishing "+model.getName() +" result");
-                sendEvent(new PublishResultsEvent(model));
-                student.addPublication();
-            }   
-        }
-        //System.out.println("S");
-        //terminate();
+                model.setStatus(Status.Trained);
+                Cluster.getInstance().addTrainedModelName(model.getName());
+                future= sendEvent(new TestModelEvent(model));
+                modelCopy = future.get();
+
+                if(modelCopy == null)
+                    break;
+
+                model = modelCopy;
+                
+                if(model.getResult() == Result.Good){
+                    sendEvent(new PublishResultsEvent(model));
+                }   
+            }
+        });
 
     }
 }

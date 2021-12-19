@@ -26,18 +26,18 @@
   </dependencies>
   <build>
     <plugins>
-    <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>3.0.2</version>            
-        <configuration>
-            <archive>
-                <manifest>
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>1.2.1</version>
+            <configuration>
                 <mainClass>bgu.spl.mics.application.CRMSRunner</mainClass>
-                </manifest>
-            </archive>
-        </configuration>
-    </plugin>
+                <arguments>
+                    <argument>example_input.json</argument>
+                </arguments>
+            </configuration>
+        </plugin>
+
     </plugins>
     </build>	
 </project>

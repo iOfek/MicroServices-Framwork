@@ -1,8 +1,8 @@
 package bgu.spl.mics.application.messages;
 
-import javax.jws.WebParam.Mode;
+/* import javax.jws.WebParam.Mode;
 import javax.print.attribute.standard.PrinterIsAcceptingJobs;
-import javax.swing.plaf.basic.BasicTreeUI.TreeCancelEditingAction;
+import javax.swing.plaf.basic.BasicTreeUI.TreeCancelEditingAction; */
 
 import bgu.spl.mics.Event;
 import bgu.spl.mics.application.objects.Model;

@@ -1,6 +1,6 @@
 package bgu.spl.mics.application.objects;
 
-import javax.jws.WebParam.Mode;
+/* import javax.jws.WebParam.Mode; */
 
 /**
  * Passive object representing single student.
@@ -68,12 +68,19 @@ public class Student {
         return publications;
     }
 
-    public void addPublication() {
+    public void addPublication(Model model) {
         this.publications +=1;
+        for (Model m : models) {
+            if(m == model)
+                m.publish();
+        } 
     }
 
     public int getPapersRead() {
         return papersRead;
+    }
+    public void setPapersRead() {
+        this.papersRead -= publications;
     }
 
     public void addPapersRead(int papersRead) {

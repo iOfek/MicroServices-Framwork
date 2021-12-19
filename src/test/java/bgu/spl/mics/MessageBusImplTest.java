@@ -33,12 +33,14 @@ public class MessageBusImplTest {
         broadcast = new ExampleBroadcast("nadav");
         m = null;
         msb = MessageBusImpl.getInstance();
+        msb.clear();
         String [] eargs = {"event"};
         String [] bargs = {"2"};
 
         eService = new ExampleMessageSenderService("ofekService", eargs);
         bService = new ExampleBroadcastListenerService("nadavService", bargs);
     }
+ 
 
     @Test
     public void testSubscribeEvent() {
@@ -81,9 +83,9 @@ public class MessageBusImplTest {
         });
         t1.start();
         try {
-            Thread.sleep(100);
+            Thread.sleep(1000);
         } catch (Exception e) {}
-        assertEquals(Thread.State.TIMED_WAITING,t1.getState());
+        assertEquals(Thread.State.WAITING,t1.getState());
         futureEvent = msb.sendEvent(event);
     }
 

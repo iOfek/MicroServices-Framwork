@@ -1,7 +1,6 @@
 package bgu.spl.mics.application.objects;
 
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Passive object representing a single CPU.
@@ -14,10 +13,13 @@ public class CPU {
     private int cores;
     private LinkedBlockingQueue<DataBatch> dataBatchCollection;
   	private Cluster cluster;
-	//private AtomicInteger t = new AtomicInteger(1);
 	private DataBatch currentDataBatch;
-	private int timeToSend =-1;
+
 	private int tickTime =0;
+	private int cpuId;
+	private int timeToSend =-1;
+	private int processTime =0;
+	
 	/**
 	 * This should be the the only public constructor in this class.
 	 */
@@ -27,6 +29,7 @@ public class CPU {
 		this.cluster = Cluster.getInstance();
 		
 	}
+
 
 	/**
 	 * @param  dataBatch - the {@link DataBatch} processed
@@ -52,29 +55,19 @@ public class CPU {
 	 * 
 	 * Proccesses {@code dataBatch} and sends back to {@link Cluster} 
 	 * @param  dataBatch - the {@link DataBatch} to be processed
-	 * @throws InterruptedException
 	 * @post getDataBatchCollection.contains({@code dataBatch}) == false
 	 * @post cluster.getOutQueue().contains({@code dataBatch}) == true
 	 * @post getTickTime() = pre.getTickTime() + CPUProcessingTimeInTicks(dataBatch) 
 	 */
-	public  void proccessDataBatch() throws InterruptedException{
+	public  void proccessDataBatch() {
 		if(currentDataBatch == null){
 			if(!dataBatchCollection.isEmpty()){
 				currentDataBatch =  dataBatchCollection.poll();
-				timeToSend = getTickTime()+CPUProcessingTimeInTicks(currentDataBatch);
-			}/* System.out.println("Training time: "+CPUProcessingTimeInTicks(currentDataBatch));
-			System.out.println("send to clustre in time "+ timeToSend); */
+				timeToSend = CPUProcessingTimeInTicks(currentDataBatch);
+			}
 		}
 		
-		/* int currTime = getTickTime();
-			//System.out.println("CPU curr time: "+ currTime);
-
-			while(getTickTime()< currTime + CPUProcessingTimeInTicks(dataBatch)){
-				//System.out.print("");
-			}
-		// add processed time to statistics
-		//cluster.addCpuTime(CPUProcessingTimeInTicks(dataBatch));
-		cluster.getOutQueue().add(dataBatch); */
+	
 	}
 
 	
@@ -83,10 +76,10 @@ public class CPU {
 	 */
 	public int getTickTime(){
 		return tickTime;
-		//return t.get();
 	}
+
 	/**
-	 * update CPU's tick Time
+	 * update CPU's tick Time and process databatch if needed
 	 * @param ticksToAdd ticks to add to CPU clock after opereation
 	 * @throws InterruptedException
 	 * @post getTickTime() = pre.getTickTime() + {@code ticksToAdd}
@@ -95,31 +88,37 @@ public class CPU {
 
 		proccessDataBatch();
 		if(currentDataBatch!= null){
-			int time =getTickTime();
-			if(time >= timeToSend){
-				//System.out.println("sent db to cluster");
+			cluster.addCpuTime(cpuId);
+			processTime+=1;
+			if(processTime == timeToSend){
 				cluster.sendDataBatchtoGPU(currentDataBatch);
-				//System.out.println("processin");
-				cluster.addCpuTime(1);
+				
 				cluster.advanceNumberOfDatabatchsProcessedByCpus();
-				//cluster.getOutQueue().add(currentDataBatch);
+			
 				currentDataBatch=null;
+				processTime =0;
 			}
 		}
 		
-		
-		// add processed time to statistics
-		//cluster.addCpuTime(CPUProcessingTimeInTicks(dataBatch));
 		tickTime+=1;
-		//t.incrementAndGet();
 	}
 
 	/**
-	 * @return {@link CPU}'s dataBatchCollection
+	 * @param dataBatch the databatch to be added 
+	 * add {@link DataBatch} {@code dataBatch} to {@link CPU}'s dataBatchCollection
 	 */
-	public LinkedBlockingQueue<DataBatch> getDataBatchCollection() {
-		return dataBatchCollection;
-	}
 	
+	public void addDataBatchToCpu(DataBatch dataBatch){
+		dataBatchCollection.add(dataBatch);
+	} 
+	public void setCpuId(int cpuId){
+		this.cpuId = cpuId;
+	}
+	public int getCpuId(){
+		return cpuId;
+	}
+	public int getCpuCores(){
+		return cores;
+	}
 
 }

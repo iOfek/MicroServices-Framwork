@@ -1,0 +1,52 @@
+Students
+Simba
+Model YOLO10 Status: Tested Result: Bad Published false
+Model ResNet9000 Status: Training Result: None Published false
+Model LessEfficientNet Status: PreTrained Result: None Published false
+Model DensestNet Status: PreTrained Result: None Published false
+Papers Read: 0
+
+Zazu
+Model VIT Status: Training Result: None Published false
+Papers Read: 0
+
+Pumba
+Model Bert Status: Tested Result: Good Published true
+Model GPT4 Status: Training Result: None Published false
+Model GPT5 Status: PreTrained Result: None Published false
+Model GPT10 Status: PreTrained Result: None Published false
+Papers Read: -1
+
+Timon
+Model Percepetron Status: Tested Result: Bad Published true
+Model GNN Status: Trained Result: None Published false
+Model MoreStyleGAN Status: PreTrained Result: None Published false
+Model ConditionalGAN Status: PreTrained Result: None Published false
+Papers Read: -1
+
+Nala
+Model YOLO9000 Status: Tested Result: Bad Published false
+Model VIT2 Status: Training Result: None Published false
+Model MuchMoreEfficientNet Status: PreTrained Result: None Published false
+Model DenserNet Status: PreTrained Result: None Published false
+Papers Read: 0
+
+Confrences
+ICML
+Published Models: Bert
+NeurIPS
+Published Models: Percepetron
+CVPR
+Published Models:
+ECCV
+Published Models:
+AISTATS
+Published Models:
+Test
+Published Models:
+
+
+Cluster Statistics
+GPU time use 7979
+CPU time use 33482
+Number Of Databatchs Processed By Cpus 7980

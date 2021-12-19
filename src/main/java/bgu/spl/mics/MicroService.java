@@ -1,19 +1,7 @@
 package bgu.spl.mics;
 
-import java.lang.invoke.CallSite;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.concurrent.ExecutorCompletionService;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-import bgu.spl.mics.application.messages.KillEmAllBroadcast;
-import bgu.spl.mics.application.messages.TickBroadcast;
-import bgu.spl.mics.application.messages.TrainModelEvent;
-import bgu.spl.mics.application.services.StudentService;
-import bgu.spl.mics.application.services.TimeService;
 
 /**
  * The MicroService is an abstract class that any micro-service in the system
@@ -35,11 +23,11 @@ import bgu.spl.mics.application.services.TimeService;
  */
 public abstract class MicroService implements Runnable {
 
-    //private AtomicBoolean terminated = new AtomicBoolean(false);
     private boolean terminated = false;
     private final String name;
     private MessageBusImpl msb;
     private HashMap<Class, Callback> classCallbackMap;
+
     /**
      * @param name the micro-service name (used mainly for debugging purposes -
      *             does not have to be unique)
@@ -119,8 +107,6 @@ public abstract class MicroService implements Runnable {
      */
     protected final <T> Future<T> sendEvent(Event<T> e) {
         Future<T> future =  msb.sendEvent(e);
-        if(!msb.isThereAMicroserviceSubscribedToEventType(e.getClass()))
-            return null;
         return future; 
     }
 
@@ -160,7 +146,6 @@ public abstract class MicroService implements Runnable {
     protected final void terminate() {
         this.terminated = true;
         
-       //terminated.set(true);
     }
 
     /**
@@ -179,13 +164,7 @@ public abstract class MicroService implements Runnable {
     public final void run() {
         
         msb.register(this);
-        
-          
-        
-        
-        System.out.println("Intiilaizing "+name+"...");
         initialize();
-    
         while (!terminated ) {
             
            
@@ -202,7 +181,6 @@ public abstract class MicroService implements Runnable {
             
         }
 
-        System.out.println("Terminated "+ getName());
         msb.unregister(this);
 
     }

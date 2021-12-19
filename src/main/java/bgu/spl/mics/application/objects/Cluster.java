@@ -1,10 +1,7 @@
 package bgu.spl.mics.application.objects;
 
-import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.Queue;
 import java.util.Vector;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -17,50 +14,67 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Cluster {
 
+	// private ConcurrentHashMap<Integer,GPU> GPUs2;
+
 	private Vector<GPU> GPUs;
 	
-	private LinkedList<CPU> CPUs;
-	/* private LinkedBlockingQueue<DataBatch> in, out; */
-	private LinkedBlockingQueue<String> trainedModelNames;
+	private LinkedBlockingQueue<CPU> CPUs;
+	private LinkedList<String> trainedModelNames;
 	private AtomicInteger numberOfDatabatchsProcessedByCpus = new AtomicInteger(0);
 	private AtomicInteger cpuTimeUsed = new AtomicInteger(0);
 	private AtomicInteger gpuTimeUsed = new AtomicInteger(0);
-	private Vector <Integer> processTime;
-	/* private boolean terminated =false;		 */	
+
+
+	private Vector <Integer> GpuProcessTime;
+	private Vector <Integer> CpuProcessTime;
+
+	public void addModelName(String modelName){
+		trainedModelNames.add(modelName);
+	}
+
 	public void printStatistics(){
 		System.out.println("GPU Time "+gpuTimeUsed.get());
 		System.out.println("CPU Time "+cpuTimeUsed.get());
 		System.out.println("Number Of Databatchs Processed By Cpus "+numberOfDatabatchsProcessedByCpus.get());
-		for (int i = 0; i < processTime.size(); i++) {
-			System.out.println("GPU "+i+" processed time "+processTime.get(i));
-		} 
+		for (int i = 0; i < GpuProcessTime.size(); i++) {
+			System.out.println("GPU "+i+" processed time "+GpuProcessTime.get(i));
+		}
+		for (int i = 0; i < CpuProcessTime.size(); i++) {
+			System.out.println("CPU "+i+" processed time "+CpuProcessTime.get(i));
+		}
 
+	}
+	public int getCpuTimeUsed(){
+		return cpuTimeUsed.get();
+	}
+	public int getGpuTimeUsed(){
+		return gpuTimeUsed.get();
+	}
+	public int getNumberOfDatabatchsProcessedByCpus(){
+		return numberOfDatabatchsProcessedByCpus.get();
+	}
+	public LinkedList<String> getTrainedModelNames(){
+		return trainedModelNames;
 	}
 	  
 	public void addTrainedModelName(String modelName){
 		trainedModelNames.add(modelName);
 	}
-	public void addCpuTime(int cpuTime){
-		cpuTimeUsed.addAndGet(cpuTime);
+	public void addCpuTime(int cpuId){
+		cpuTimeUsed.incrementAndGet(); 
+		int n = CpuProcessTime.get(cpuId);
+		CpuProcessTime.set(cpuId, new Integer(n+1));
 	}
-	public void addGpuTime(int gpuId, int gpuTime){
-		gpuTimeUsed.addAndGet(gpuTime);
-		int n = processTime.get(gpuId);
-		processTime.set(gpuId, new Integer(n+1));
+	public void addGpuTime(int gpuId){
+		gpuTimeUsed.incrementAndGet();
+		int n = GpuProcessTime.get(gpuId);
+		GpuProcessTime.set(gpuId, new Integer(n+1));
 	}
 	public void advanceNumberOfDatabatchsProcessedByCpus(){
 		numberOfDatabatchsProcessedByCpus.incrementAndGet();
 	}
 
-	// Consider Using SynchronousQueue which has at most one item
-	// it is used a way way to communicate between threads (e.g CPU and GPU)
-	//TODO statistics
-	/* 	
-	 * Statistics: You are free to choose how to implement this - It needs to hold the
-	 * following information: Names of all the models trained, Total number of data
-	 * batches processed by the CPUs, Number of CPU time units used, number of
-	 * GPU time units used. 
-	 */
+
 
 	 /**
      * {@link Cluster} Singleton Holder.
@@ -73,11 +87,34 @@ public class Cluster {
 	public void addGpu(GPU gpu){
 		gpu.setGpuId(GPUs.size());
 		GPUs.add(gpu);
-		processTime.add(0);
-	}
-
+		// gpu.setGpuId(GPUs2.size());
+		// GPUs2.put(gpu.getGpuID(), gpu);
+		GpuProcessTime.add(0);
+	}	
+	private int id =0;
 	public void addCpu(CPU cpu){
-		CPUs.addLast(cpu);
+		cpu.setCpuId(id);
+		CPUs.add(cpu);
+		id+=1;
+		CpuProcessTime.add(0);
+	}
+	public void setCluster(){
+		int minCpu =1000;
+		for (CPU cpu : CPUs) {
+			minCpu = Math.min(minCpu, cpu.getCpuCores());
+		}
+		int CpusSize = CPUs.size();
+		LinkedList<CPU> toAdd = new LinkedList<CPU>();
+
+		for (CPU cpu : CPUs) {
+			int CpusToAdd = cpu.getCpuCores()/minCpu;
+			for (int i = 1; i < CpusToAdd; i++) {
+				toAdd.add(cpu);
+			}
+		}
+		for (CPU cpu : toAdd) {
+			CPUs.add(cpu);
+		}
 	}
 
 	/**
@@ -86,11 +123,11 @@ public class Cluster {
 	
 	private Cluster(){
 		GPUs = new Vector<GPU>();
-		CPUs = new LinkedList<CPU>();
-		processTime = new Vector<Integer>();
-/* 		in = new LinkedBlockingQueue<DataBatch>();
-		out = new LinkedBlockingQueue<DataBatch>(); */
-		trainedModelNames = new LinkedBlockingQueue<String>();
+		//  GPUs2 = new ConcurrentHashMap<Integer,GPU>();
+		CPUs = new LinkedBlockingQueue<CPU>();
+		GpuProcessTime = new Vector<Integer>();
+		CpuProcessTime = new Vector<Integer>();
+		trainedModelNames = new LinkedList<String>();
 	}
 	
 	/**
@@ -101,34 +138,29 @@ public class Cluster {
     }
 
 
-	
-	/**
-     * @return the CPUQueue}.
-     */
-	/* public LinkedBlockingQueue<DataBatch> getInQueue(){
-		return in;
-	} */
-
-	/**
-     * @return the GPUQueue}.
-     */
-	/* public LinkedBlockingQueue<DataBatch> getOutQueue(){
-		return out;
-	} */
-
-
-
-	public void sendDataBatchtoGPU(DataBatch dataBatch){
-		GPU gpu = GPUs.get(dataBatch.getGpuId());
-		gpu.getVRAM().add(dataBatch);
+	public  void sendDataBatchtoGPU(DataBatch dataBatch){
+		GPUs.get(dataBatch.getGpuId()).addDataBatchToVRAM(dataBatch);
+		/* GPU gpu = ;
+		gpu.getVRAM().add(dataBatch); */
+		// GPUs2.get(dataBatch.getGpuId()).addDataBatchToVRAM(dataBatch); 
 	}
 
-	public synchronized void sendDataBatchtoCPU(DataBatch dataBatch){
+	public  void sendDataBatchtoCPU(DataBatch dataBatch){
 		// process data batchs in round-robin manner
-		CPUs.getFirst().getDataBatchCollection().add(dataBatch);
-		CPU cpu = CPUs.removeFirst();
-		CPUs.addLast(cpu);
+
+		CPU cpu = null;
+		try {
+			cpu = CPUs.take();
+			cpu.addDataBatchToCpu(dataBatch);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		CPUs.add(cpu);
 	}
+
+	
+
 }		
 	
 		

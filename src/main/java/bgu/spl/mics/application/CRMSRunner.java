@@ -1,35 +1,37 @@
 package bgu.spl.mics.application;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.LinkedList;
-import java.util.concurrent.ExecutorCompletionService;
+/* import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.Executors; */
 
-import javax.jws.WebParam.Mode;
-
+/* import javax.jws.WebParam.Mode;
+ */
 import bgu.spl.mics.application.services.*;
 import com.google.gson.Gson;
 
 import bgu.spl.mics.application.objects.CPU;
 import bgu.spl.mics.application.objects.ConfrenceInformation;
-import bgu.spl.mics.Message;
+/* import bgu.spl.mics.Message;
 import bgu.spl.mics.MessageBusImpl;
-import bgu.spl.mics.application.messages.TrainModelEvent;
+import bgu.spl.mics.application.messages.TrainModelEvent; */
 import bgu.spl.mics.application.objects.*;
 import bgu.spl.mics.application.objects.GPU;
 import bgu.spl.mics.application.objects.Student;
 import com.google.gson.stream.JsonReader;
-import com.sun.org.apache.xpath.internal.operations.Mod;
-
+/* import com.sun.org.apache.xpath.internal.operations.Mod;
+ */
 /** This is the Main class of Compute Resources Management System application. You should parse the input file,
  * create the different instances of the objects, and run the system.
  * In the end, you should output serialized objects.
  */
 public class CRMSRunner {
     public static void main(String[] args) throws InterruptedException {
-        System.out.println("Hello World!");
+        System.out.println(args[0]);
 
         Student[] students = null;
         GPU[] gpus = null;
@@ -44,7 +46,7 @@ public class CRMSRunner {
 
         try {
             Gson gson = new Gson();
-            Reader reader = Files.newBufferedReader(Paths.get("example_input.json"));
+            Reader reader = Files.newBufferedReader(Paths.get(args[0]));
             JsonReader jReader = new JsonReader(reader);
 
             jReader.beginObject();
@@ -100,7 +102,10 @@ public class CRMSRunner {
             cpuThreads.add(new Thread(()->{cpuService.run();}));
             cluster.addCpu(cpus.get(i));
         }
+        
+
         for(int i=0;i<conferences.length;i++) {
+            conferences[i].setModels();
             ConferenceService conferenceService=new ConferenceService("Conference Service "+i,conferences[i]);
             conferenceThreads.add(new Thread(()->{conferenceService.run();}));
         }
@@ -109,11 +114,12 @@ public class CRMSRunner {
             for(int j=0;j<students[i].getModels().length;j++){
                 Model m =students[i].getModels()[j];
                 students[i].getModels()[j] = new Model(m.getName(),m.getDataType(),m.getDataSize());
+                students[i].getModels()[j].setStudent(students[i]);
             }
             StudentService studentService=new StudentService("Student Service "+i,students[i]);
             studentThreads.add(new Thread(()->{studentService.run();}));
         }
-
+        cluster.setCluster();
 
          for(Thread gpuT:gpuThreads) {
             gpuT.start();
@@ -163,7 +169,7 @@ public class CRMSRunner {
         /* while (!(ts.getState() == Thread.State.WAITING)) {
             //System.out.println("waiting for gpu thread to be in wait state");
         } */
-        ts.join(); 
+        //ts.join(); 
 
          
 
@@ -182,14 +188,52 @@ public class CRMSRunner {
         } 
 
         System.out.println("FINIS");
+        try {
+            FileWriter myWriter = new FileWriter("output.txt");
+            myWriter.write("Students\n");
+            for (Student student : students) {
+                myWriter.write(student.getName()+"\n");
+    
+                for (Model model : student.getModels()) {
+                    myWriter.write("Model "+model.getName()+" Status: "+model.getStatus() +" Result: "+model.getResult() +" Published " + model.isPublished()+"\n");
+                }
+                myWriter.write("Papers Read: "+student.getPapersRead()+"\n\n");
+            }
+
+            myWriter.write("Confrences\n");
+            for (ConfrenceInformation confrenceInformation : conferences) {
+                myWriter.write(confrenceInformation.getName()+"\n");
+                myWriter.write("Published Models:");
+               // myWriter.write(confrenceInformation.getModels().size());
+                 for (Model m : confrenceInformation.getModels()) {
+                    myWriter.write(" "+m.getName());
+                } 
+                myWriter.write("\n");
+            }
+            myWriter.write("\n\n");
+            myWriter.write("Cluster Statistics\n"); 
+            myWriter.write("GPU time use "+ cluster.getGpuTimeUsed()+"\n");
+            myWriter.write("CPU time use " + cluster.getCpuTimeUsed()+"\n");
+            myWriter.write("Number Of Databatchs Processed By Cpus " + cluster.getNumberOfDatabatchsProcessedByCpus()+"\n");
+            myWriter.close();
+            System.out.println("Successfully wrote to the file.");
+          } catch (IOException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        } 
         cluster.printStatistics();
-        for (Student student : students) {
+        System.out.println("Trained Models");
+		for (String modelName : cluster.getTrainedModelNames()) {
+			System.out.print(", "+modelName);
+		}
+/*         for (Student student : students) {
             System.out.println(student.getName());
+
             for (Model model : student.getModels()) {
-                System.out.println("Model "+model.getName()+" Status: "+model.getStatus() +" Result: "+model.getResult() +" Published" );
+                System.out.println("Model "+model.getName()+" Status: "+model.getStatus() +" Result: "+model.getResult() +" Published " + model.isPublished());
             }
             System.out.println("Papers Read: "+student.getPapersRead());
-        }
+        } */
                 
         
 

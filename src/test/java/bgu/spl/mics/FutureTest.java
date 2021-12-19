@@ -26,7 +26,10 @@ public class FutureTest {
         }catch(Exception e){}
         assertEquals(Thread.State.WAITING,t1.getState());
         future.resolve(2);
-        assertEquals(Thread.State.BLOCKED,t1.getState());
+        try{
+            t1.join();
+        }catch(Exception e){}
+        assertEquals(Thread.State.TERMINATED,t1.getState());
         assertEquals(new Integer(2), future.get());
     }
 
@@ -55,19 +58,8 @@ public class FutureTest {
             t1.join();
         }catch(Exception e){}
         assertNull(n);
-
-        Thread t2 = new Thread(() ->{
-            try{
-                n = future.get(10,TimeUnit.SECONDS);
-            }catch(Exception e){ }
-        });
-        t2.start();
-        assertNull(n);
-        try {
-            Thread.sleep(200);
-        } catch (Exception e) { }
-        future.resolve(2);
-        assertEquals(new Integer(2),future.get());
-        
+        future.resolve(new Integer(2));
+        n = future.get(4,TimeUnit.SECONDS);
+        assertEquals(n, new Integer(2));
     }
 }

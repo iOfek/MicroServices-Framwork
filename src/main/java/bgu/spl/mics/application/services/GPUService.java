@@ -1,28 +1,14 @@
 package bgu.spl.mics.application.services;
 
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-
-import javax.jws.WebParam.Mode;
-import javax.naming.spi.DirStateFactory.Result;
-import javax.net.ssl.SSLEngineResult.Status;
-
-import bgu.spl.mics.Callback;
 import bgu.spl.mics.Event;
-import bgu.spl.mics.Future;
-import bgu.spl.mics.Message;
-import bgu.spl.mics.MessageBus;
-import bgu.spl.mics.MessageBusImpl;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.KillEmAllBroadcast;
 import bgu.spl.mics.application.messages.TestModelEvent;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.messages.TrainModelEvent;
-import bgu.spl.mics.application.objects.Data;
-import bgu.spl.mics.application.objects.DataBatch;
 import bgu.spl.mics.application.objects.GPU;
 import bgu.spl.mics.application.objects.Model;
-import bgu.spl.mics.application.objects.Data.Type;
 
 /**
  * GPU service is responsible for handling the
@@ -49,23 +35,24 @@ public class GPUService extends MicroService {
     
     @Override
     protected void initialize() { 
+        //KillEmAll makes sure all services are done
         subscribeBroadcast(KillEmAllBroadcast.class, m -> {
             terminate();
             while(!eventQueue.isEmpty())
                 complete(eventQueue.poll(), null);
             gpu.reset();
-            
         });  
         
+        //Tick Broadcast lambda
         subscribeBroadcast(TickBroadcast.class, m->{
-           
-                
+            
             Event event =null;
             if(gpu.getModel()== null){
                 for (Event test : eventQueue) {
                     if(test.getClass()== TestModelEvent.class){
                         Model model =gpu.testModelEvent(((TestModelEvent)test).getModel());
-                        complete(eventQueue.poll(),model);
+                        complete(test,model);
+                        eventQueue.remove(test);
                     }
                 }                
                 if(!eventQueue.isEmpty()){
@@ -75,35 +62,31 @@ public class GPUService extends MicroService {
                         gpu.divideDataToDataBatches();
                         //System.out.println(gpu.getGpuID()+"started training "+ gpu.getModel().getName());
                     }
-                   
                 }
             }
             else if(gpu.getModel().getStatus() == Model.Status.Trained){
                 complete(eventQueue.poll(), gpu.getModel());
-                
-                //System.out.println(gpu.getGpuID()+"completed trining "+ gpu.getModel().getName());
                 gpu.reset();
             }
-            //System.out.println(gpu.getTickTime());
             gpu.advanceTick();
-            
-            
         });
 
+        //Subscribe Train Model event lambda
         subscribeEvent(TrainModelEvent.class, m->{
             eventQueue.add(m);
         });
         
+        //Subscribe Test Model event lambda
         subscribeEvent(TestModelEvent.class, m->{
             eventQueue.add(m);
-            /* if(gpu.getModel()== null){
+            if(gpu.getModel()== null){
                 for (Event test : eventQueue) {
                     if(test.getClass()== TestModelEvent.class){
                         Model model =gpu.testModelEvent(((TestModelEvent)test).getModel());
-                        complete(eventQueue.poll(),model);
+                        complete(test,model);
                     }
                 } 
-            } */
+            }
         });
     }
 }

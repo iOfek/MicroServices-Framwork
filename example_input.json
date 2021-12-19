@@ -140,10 +140,11 @@
         {"name": "NeurIPS", "date": 25000},
         {"name": "CVPR", "date": 30000},
         {"name": "ECCV", "date": 40000},
-        {"name": "AISTATS", "date": 50000}
+        {"name": "AISTATS", "date": 50000},
+        {"name": "Test", "date": 55001}
     ],
     "TickTime": 1,
-    "Duration": 55000
+    "Duration": 5000
     
 }
 

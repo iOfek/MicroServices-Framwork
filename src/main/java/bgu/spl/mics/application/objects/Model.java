@@ -1,6 +1,5 @@
 package bgu.spl.mics.application.objects;
 
-import javax.xml.bind.PrintConversionEvent;
 
 /**
  * Passive object representing a Deep Learning model.
@@ -26,11 +25,29 @@ public class Model {
 
     private String name;
     private Data data;
-    private Status status;
-    private Result result;
-
+    private Status status = Status.PreTrained;
+    private Result result = Result.None;
+    private Student student;
+    private boolean published = false;
     private Data.Type type;
     private int size;
+
+
+
+    public void setStudent(Student student){
+        this.student = student;
+    }
+    public Student getStudent(){
+        return student;
+    }
+
+    public boolean isPublished(){
+        return published;
+    }
+    public void publish(){
+        published = true;
+    }
+
     /**
      * {@link Model} Cosntructor 
      */

@@ -1,11 +1,11 @@
 package bgu.spl.mics;
 
-import java.nio.channels.InterruptedByTimeoutException;
-import java.util.concurrent.Executor;
+/* import java.nio.channels.InterruptedByTimeoutException;
+import java.util.concurrent.Executor; */
 import java.util.concurrent.TimeUnit;
 
-import javax.xml.bind.PrintConversionEvent;
-import javax.xml.namespace.QName;
+/* import javax.xml.bind.PrintConversionEvent;
+import javax.xml.namespace.QName; */
 
 /**
  * A Future object represents a promised result - an object that will
@@ -21,7 +21,6 @@ public class Future<T> {
 	boolean isDone;
 	private Object lock = new Object();
 	
-	//TODO locks insted dull synchoriniztion
 	/**
 	 * This should be the the only public constructor in this class.
 	 */
@@ -87,18 +86,15 @@ public class Future<T> {
      *         elapsed, return null.
      */
 	public T get(long timeout, TimeUnit unit) {
-		if(this.isDone())
-			return this.result;
+		if(!this.isDone()){
 		synchronized(lock){
-			while(!isDone()){
+			long t=unit.toMillis(timeout);
 				try {
-					lock.wait(timeout);
+					Thread.sleep(t);
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
-			
 		}
 		return this.result;	
 	}
